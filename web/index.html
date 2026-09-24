@@ -220,6 +220,7 @@ h2 .ctoggle,h3 .ctoggle,h4 .ctoggle{font-size:0}
 /* Kopf-Links, Copyright */
 .headlinks{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .headlinks .btn{text-decoration:none;display:inline-flex;align-items:center}
+.seg.lang button{padding:6px 10px;font-weight:600}
 .headlinks .note{flex-basis:100%;text-align:right;font-size:12px}
 .copyright{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;justify-content:center;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
 .copyright a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
@@ -239,6 +240,7 @@ h2 .ctoggle,h3 .ctoggle,h4 .ctoggle{font-size:0}
       <p class="lede">Muster planen für die runde 32er-Scheibe und die eckige Platte: Farben legen, Muster laden oder zeichnen, und Aufbau, Flechtschritte und Fadenbedarf rechnen sich sofort mit.</p>
     </div>
     <div class="headlinks">
+      <div class="seg lang" id="langSeg" role="group" aria-label="Sprache / Language"><button type="button" data-lang="de" aria-pressed="true">DE</button><button type="button" data-lang="en" aria-pressed="false">EN</button></div>
       <a class="btn" href="README.html" target="_blank" rel="noopener" id="lnkReadme">Anleitung</a>
       <a class="btn primary" href="kumihimo-planer.zip" download id="lnkZip">Download ZIP</a>
       <span class="note num" id="verInfo"></span>
@@ -672,9 +674,209 @@ h2 .ctoggle,h3 .ctoggle,h4 .ctoggle{font-size:0}
 <script>
 (function(){
 "use strict";
+/* ---------- Sprache (Deutsch / English) ---------- */
+let LANG="de";
+try{LANG=localStorage.getItem("kumihimo-lang")||((navigator.language||"de").toLowerCase().startsWith("de")?"de":"en");}catch(e){LANG=(navigator.language||"de").toLowerCase().startsWith("de")?"de":"en";}
+if(LANG!=="en")LANG="de";
+const LOC=LANG==="en"?"en-GB":"de-AT";
+const COLOR_EN={Indigo:"Indigo",Elfenbein:"Ivory",Zinnober:"Vermilion",Salbei:"Sage",Senf:"Mustard",Tinte:"Ink"};
+const COLOR_DE=Object.fromEntries(Object.entries(COLOR_EN).map(([a,b])=>[b,a]));
+const SIDE_EN={Oben:"Top",Unten:"Bottom",Links:"Left",Rechts:"Right"};
+function colorName(n){
+  if(LANG==="en"){if(COLOR_EN[n])return COLOR_EN[n];const m=/^Farbe (\d+)$/.exec(n);return m?"Colour "+m[1]:n;}
+  if(COLOR_DE[n]&&n!=="Indigo")return COLOR_DE[n];const m=/^Colou?r (\d+)$/.exec(n);return m?"Farbe "+m[1]:n;
+}
+const colorWord=()=>LANG==="en"?"Colour ":"Farbe ";
+const I18N_EXACT={
+"Kumihimo-Planer":"Kumihimo Planner",
+"Muster planen für die runde 32er-Scheibe und die eckige Platte: Farben legen, Muster laden oder zeichnen, und Aufbau, Flechtschritte und Fadenbedarf rechnen sich sofort mit.":"Plan patterns for the round 32-slot disk and the square plate: set colours, load or draw a pattern, and the setup, braiding moves and thread requirements are worked out instantly.",
+"Anleitung":"Guide","Download ZIP":"Download ZIP",
+"Runde Scheibe":"Round disk","Eckige Scheibe":"Square plate","32 Schlitze · Kongo Gumi":"32 slots · Kongo Gumi","1–12 · A–H · Flachband, Vierkant":"1–12 · A–H · flat braid, square braid",
+"Muster":"Patterns","Editor":"Editor","Flechtanleitung":"Braiding guide","Export":"Export",
+"Vorlagen und eigene Muster":"Templates and my patterns","Vorlagen":"Templates","Meine Muster":"My patterns",
+"Musterkatalog, zwei Farben":"Pattern catalogue, two colours",
+"Muster-Editor":"Pattern editor",
+"Zeichne frei in die Matrix. Das Programm sucht den flechtbaren Aufbau, der deiner Zeichnung am nächsten kommt, und rechnet daraus die Schritte auf der Scheibe.":"Draw freely in the grid. The planner finds the braidable setup closest to your drawing and works out the moves on the disk.",
+"Zeichne frei auf die Bandseiten. Das Programm sucht den flechtbaren Aufbau, der deiner Zeichnung am nächsten kommt, und rechnet daraus die Züge auf der Platte.":"Draw freely on the braid faces. The planner finds the braidable setup closest to your drawing and works out the moves on the plate.",
+"Fäden":"Strands","Farbe":"Colour","Farben":"Colours","anpassen":"customise","Werkzeug":"Tool","Stift":"Pen","Radierer":"Eraser","Füllen":"Fill","Modus":"Mode","Frei":"Free","Nur Flechtbares":"Braidable only","Reihen":"Rows","Durchgänge":"Passes","Durchgang":"Pass","Vom Planer holen":"Take from planner","Leeren":"Clear",
+"Deine Zeichnung":"Your drawing","Flechtbares Ergebnis":"Braidable result","So passt es":"How well it fits","passt genau":"exact fit","Noch leer":"Still empty",
+"Farbe in der Leiste über der Matrix wählen. Ziehen malt, Radierer macht Zellen egal (schraffiert). Links und rechts gehören zusammen: die Matrix ist die abgewickelte Kordel, eine Zeile ist eine halbe Runde Flechtschritte.":"Pick a colour in the bar above the grid. Drag to paint; the eraser marks cells as “don’t care” (hatched). Left and right edges belong together: the grid is the unrolled cord, one row is half a round of moves.",
+"Zeig auf eine Zelle: alle Stiche desselben Fadens leuchten auf.":"Point at a cell: all stitches of the same strand light up.",
+"So sieht das Ergebnis auf der Kordel aus. Die Spalten der Matrix laufen schräg um die Kordel, deshalb werden senkrechte Streifen zu Spiralen.":"This is how the result looks on the cord. The grid columns run diagonally around the cord, so vertical stripes become spirals.",
+"Auf die Scheibe übernehmen":"Apply to disk","Liegt schon auf der Scheibe":"Already on the disk","Auf die Platte übernehmen":"Apply to plate","Liegt schon auf der Platte":"Already on the plate",
+"Danach siehst du das Muster darunter auf der Scheibe; Startaufbau, Flechtschritte und Fadenbedarf folgen weiter unten. Speichern kannst du unter „Muster laden“ → „Meine Muster“.":"The braiding guide then shows the disk, the starting setup, moves and thread requirements. You can save the pattern under Export.",
+"Danach zeigt die Flechtanleitung Platte, Band, Züge und Fadenbedarf für diesen Aufbau.":"The braiding guide then shows plate, braid, moves and thread requirements for this setup.",
+"Wähle in der Leiste über der Matrix eine Farbe und male in die linke Matrix. Das Ergebnis rechts zeigt sofort, was sich davon flechten lässt.":"Pick a colour in the bar above the grid and paint in the left grid. The result on the right shows at once what can be braided.",
+"Wähle oben eine Farbe und male auf die Bandseiten.":"Pick a colour above and paint on the braid faces.",
+"So rechnet der Planer":"How the planner works","Zwei Stiche pro Schritt":"Two stitches per move",
+"Bei jedem Schritt wandern zwei Fäden quer über die Scheibe: oben rechts nach unten rechts, unten links nach oben links. Diese beiden legen sich außen auf die Kordel und bilden je einen Stich. Die Paare rutschen dabei pro Runde zwei Schlitze weiter; das ist normal und im Flechtplan schon eingerechnet.":"Each move takes two strands across the disk: top right to bottom right, bottom left to top left. Both lie on the outside of the cord and form one stitch each. The pairs shift two slots per round; that is normal and already included in the braiding plan.",
+"Die Musterkette":"The pattern chain",
+"Welcher Faden als nächster wandert, folgt einer festen Reihenfolge, die alle Fäden genau einmal enthält. Das Muster hängt nur von der Farbfolge in dieser Kette ab. Verdrehte oder gespiegelte Ketten ergeben dieselbe Kordel, nur verschoben.":"Which strand moves next follows a fixed order that contains every strand exactly once. The pattern depends only on the colour order in this chain. Rotated or mirrored chains give the same cord, just shifted.",
+"Vom Muster zum Aufbau":"From pattern to setup",
+"Ein Wunschmuster ist nur flechtbar, wenn alle Stiche eines Fadens dieselbe Farbe haben. Deshalb färbt ein Klick ins Musterbild immer den ganzen Faden, und Aufbau und Flechtplan ergeben sich daraus direkt.":"A desired pattern can only be braided if all stitches of one strand have the same colour. That is why the planner always colours whole strands, and the setup and braiding plan follow directly.",
+"Gegenprobe und Grenzen":"Cross-check and limits",
+"Für 16 Fäden in zwei Farben zählt der Katalog 1162 verschiedene Muster, genau die Zahl aus":"For 16 strands in two colours the catalogue counts 1162 different patterns, exactly the number from",
+"„Changing Spots“ (Bridges 2022)":"“Changing Spots” (Bridges 2022)",
+". Neigung und Form der Stiche sind schematisch gezeichnet.":". The slant and shape of the stitches are drawn schematically.",
+"Scheibe und Kordel":"Disk and cord","Zählung":"Numbering","im Uhrzeigersinn":"clockwise","gegen":"anticlockwise",
+"Nur zum Ansehen: Fadenzahl und Farben kommen aus „Muster“ und dem Muster-Editor.":"View only: strand count and colours come from “Patterns” and the pattern editor.",
+"Scheibe":"Disk","Kordel":"Cord","Musterbild, abgerollt":"Pattern, unrolled","Aufbau":"Setup","Zurück":"Back","Nächster Schritt":"Next move","Anhalten":"Pause","Drehen":"Rotate","Ziehen dreht die Kordel.":"Drag to rotate the cord.",
+"Zeig auf einen Stich, um zu sehen, von welchem Faden er stammt.":"Point at a stitch to see which strand it comes from.",
+"Musterkette":"Pattern chain",
+"Die Reihenfolge, in der die Fäden auf der Kordel auftauchen. Die Kordel ist diese Kette, schraubenförmig aufgewickelt. Die Zahl nennt den Startschlitz.":"The order in which the strands appear on the cord. The cord is this chain, wound up as a helix. The number is the starting slot.",
+"Aufbau und Flechtplan":"Setup and braiding plan","Flechtschritte · erste zwei Runden":"Moves · first two rounds","Schritt":"Move","Oben":"Top","Unten":"Bottom","Links":"Left","Rechts":"Right",
+"Oben rechts nach unten":"Top right to bottom","Unten links nach oben":"Bottom left to top","Startaufbau":"Starting setup","Rapport":"Repeat","Schritte":"moves","Schritte.":"moves.",
+"Fadenbedarf":"Thread requirements","Länge und Zugabe":"Length and allowance","Fertige Länge (cm)":"Finished length (cm)","Einarbeitung (Faktor)":"Take-up (factor)","Zugabe je Strang (cm)":"Allowance per strand (cm)",
+"Stränge":"Strands","Länge je Strang":"Length per strand","Gesamt":"Total","Gefaltet möglich":"Folding possible","Summe":"Total","Hinweise":"Notes",
+"Der Einarbeitungsfaktor hängt von Garn, Gewicht und Zug ab. 1,5 ist ein Startwert. Am genauesten wird es, wenn du 10 cm zur Probe flechtest und misst, wie viel Faden dabei verbraucht wurde.":"The take-up factor depends on yarn, weight and tension. 1.5 is a starting value. It is most accurate if you braid a 10 cm sample and measure how much thread it used.",
+"„Gefaltet möglich“: Zwei gleichfarbige Stränge in gegenüberliegenden Schlitzen kannst du aus einem doppelt so langen Faden legen, den du in der Mitte über das Loch faltest. Das spart den Startknoten.":"“Folding possible”: two strands of the same colour in opposite slots can be one thread of double length folded over the centre hole. That saves the starting knot.",
+"Muster speichern":"Save pattern","Name für das aktuelle Muster":"Name for the current pattern","Speichern":"Save","Als Datei speichern":"Save as file","Code kopieren":"Copy code","Dateien öffnen":"Open files","Code einfügen":"Paste code","Laden":"Load",
+"Flechtplan als PDF":"Braiding plan as PDF","Mustername":"Pattern name","Als PDF exportieren":"Export as PDF",
+"A4-PDF mit Kopf (Mustername, Druckdatum), Aufbau mit Scheibenbild und Musterbild, Flechtplan für zwei Runden und Fadenbedarf.":"A4 PDF with header (pattern name, print date), setup with disk and pattern image, braiding plan for two rounds and thread requirements.",
+"A4-PDF mit Kopf (Mustername, Druckdatum), Aufbau mit Plattenbild, Flechtplan für zwei Durchgänge und Fadenbedarf.":"A4 PDF with header (pattern name, print date), setup with plate image, braiding plan for two passes and thread requirements.",
+"Flechtart und Aufbau":"Braid type and setup","Flechtart":"Braid type","Aufbau-Vorlagen":"Setup templates",
+"Klick lädt die Vorlage in den Editor. Die Farben kommen aus den ersten beiden Farben der Palette.":"Click loads the template into the editor. The colours are the first two colours of the palette.",
+"Eckige Platte":"Square plate",
+"Oben und unten die Schlitze 1 bis 12, links und rechts A bis H von oben nach unten. Die Platte wird beim Flechten nicht gedreht. Die Farben kommen aus „Muster“ und dem Muster-Editor.":"Slots 1 to 12 at the top and bottom, A to H down the left and right. The plate is not turned while braiding. Colours come from “Patterns” and the pattern editor.",
+"Platte":"Plate","Band / Kordel":"Braid / cord","schematisch":"schematic","Nächster Zug":"Next move",
+"Züge · erste zwei Durchgänge":"Moves · first two passes","Zug":"Move","Faden":"Strand","von":"from","nach":"to","zurücksetzen":"reset",
+"Bei der Anleitung von Fire Mountain Gems werden die Fäden in der Mitte gefaltet und die Falte durch das Loch gesteckt. Zwei Stränge kommen dann aus einem doppelt so langen Faden.":"In the Fire Mountain Gems instructions the threads are folded in the middle and the fold is pushed through the hole. Two strands then come from one thread of double length.",
+"Das Bandbild ist schematisch: Jeder Zug quer über die Platte legt einen Stich auf die Bandseite, zu der der Faden hinwandert. An einem echten Band ist das noch nicht geprüft.":"The braid image is schematic: each move across the plate lays a stitch on the face the strand moves to. This has not yet been checked against a real braid.",
+"Jede Spalte ist ein Schlitz, in den die Fäden auf dieser Seite wandern; eine Zeilengruppe ist ein Durchgang, oben der neueste. Radierer macht Zellen egal (schraffiert).":"Each column is a slot the strands move to on this face; each group of rows is one pass, newest at the top. The eraser marks cells as “don’t care” (hatched).",
+"Züge nach Fire Mountain Gems,":"Moves after Fire Mountain Gems,","(dort Schritte 5 bis 18).":"(steps 5 to 18 there).",". Seitenbuchstaben A–H von oben nach unten.":". Side letters A–H from top to bottom.",
+"Seite oben":"Top face","Seite unten":"Bottom face","Seite links":"Left face","Seite rechts":"Right face",
+"Flachband, 8 Fäden":"Flat braid, 8 strands","Vierkant, 8 Fäden":"Square braid, 8 strands",
+"Oben / unten":"Top / bottom","Abwechselnd":"Alternating","Außen / innen":"Outer / inner","Einfarbig":"Single colour","Oben-unten / seitlich":"Top-bottom / sides","Über Kreuz":"Crosswise",
+"Spirale fein":"Fine spiral","Spirale breit":"Wide spiral","Zickzack":"Zigzag","Querbänder":"Cross bands","Versetzte Blöcke":"Offset blocks","Striche":"Dashes","Punktlinien":"Dotted lines","Einzelne Punkte":"Single dots","Zwei schmale Spiralen":"Two narrow spirals","Spirale mit Akzent":"Spiral with accent","Dreifarbige Streifen":"Three-colour stripes","Vierfarbige Streifen":"Four-colour stripes","Bänder, dreifarbig":"Bands, three colours","Spirale":"Spiral","Rauten":"Diamonds","Punkte":"Dots","Punktreihen":"Dot rows",
+"einfarbig":"single colour",
+"Noch keine eigenen Muster. Gib unten einen Namen ein und tippe auf Speichern.":"No patterns of your own yet. Enter a name under Export and tap Save.",
+"Noch keine eigenen Muster. Unter „4 Export“ gibst du einen Namen ein und tippst auf Speichern.":"No patterns of your own yet. Enter a name under “4 Export” and tap Save.",
+"Deine gespeicherten Muster. Sie liegen in diesem Browser; mit „Als Datei speichern“ oder „Code kopieren“ nimmst du sie mit.":"Your saved patterns. They are kept in this browser; use “Save as file” or “Copy code” to take them with you.",
+"Deine gespeicherten Muster. Sie liegen beim Artefakt und sind auf jedem Gerät da, auf dem du den Planer öffnest.":"Your saved patterns. They are stored with the artifact and available on every device where you open the planner.",
+"Gespeicherte Muster für die eckige Platte. Sie liegen in diesem Browser; mit „Als Datei speichern“ nimmst du sie mit. Speichern unter Export.":"Saved patterns for the square plate. They are kept in this browser; use “Save as file” to take them with you. Save under Export.",
+"Gespeicherte Muster für die eckige Platte. Sie liegen beim Artefakt.":"Saved patterns for the square plate. They are stored with the artifact.",
+"Löschen?":"Delete?","Löschen":"Delete","kopieren":"copy","kopiert":"copied",
+"Bitte zuerst einen Namen eingeben.":"Please enter a name first.","Datei erstellt. Lege sie in den Ordner Muster.":"File created. Put it in the Muster (patterns) folder.","Datei gespeichert.":"File saved.","Speichern abgebrochen.":"Saving cancelled.","Es ist schon ein Speicherdialog offen.":"A save dialog is already open.",
+"Dateien lassen sich hier nicht speichern. Nimm „Code kopieren“.":"Files cannot be saved here. Use “Copy code”.","Code markiert – mit Strg+C kopieren.":"Code selected – copy with Ctrl+C.","Code kopiert.":"Code copied.","Code kopiert. Du kannst ihn per Nachricht oder Notiz weitergeben.":"Code copied. You can pass it on by message or note.",
+"Darin ist kein Kumihimo-Muster, das ich lesen kann.":"It contains no Kumihimo pattern I can read.","Speichern im Artefakt hat nicht geklappt. Ich lege es in diesem Browser ab.":"Saving in the artifact failed. I am storing it in this browser.",
+"Löschen hat nicht geklappt. Bitte später noch einmal.":"Deleting failed. Please try again later.","Löschen hat nicht geklappt.":"Deleting failed.",
+"PDF wird erstellt …":"Creating PDF …","PDF gespeichert.":"PDF saved.","Das PDF ließ sich hier nicht speichern.":"The PDF could not be saved here.","Das PDF konnte nicht erstellt werden.":"The PDF could not be created.","Dateien lassen sich in dieser Ansicht nicht speichern.":"Files cannot be saved in this view.",
+"Die PDF-Bibliothek konnte nicht geladen werden. Für den Export ist eine Internetverbindung nötig.":"The PDF library could not be loaded. An internet connection is needed for the export.",
+"ZIP wird gepackt …":"Packing ZIP …","Download ist in dieser Ansicht nicht möglich.":"Download is not possible in this view.","Download ging nicht, bitte später noch einmal.":"Download failed, please try again later.",
+"Nur zurücksetzen: Der Faden rückt auf derselben Seite nach, das legt keinen Stich.":"Reset only: the strand moves along on the same side, which lays no stitch.",
+"Neueste Stiche oben. Jeder Zug quer über die Platte legt einen Stich auf die Seite, zu der der Faden wandert.":"Newest stitches at the top. Each move across the plate lays a stitch on the face the strand moves to.",
+"Dann die Scheibe gegen den Uhrzeigersinn drehen, bis das nächste Paar oben liegt.":"Then turn the disk anticlockwise until the next pair is at the top.",
+"Oben rechts, Schlitz":"Top right, slot",", nach unten rechts in Schlitz":", to bottom right into slot","Unten links, Schlitz":"Bottom left, slot",", nach oben links in Schlitz":", to top left into slot","Faden mit Startschlitz":"Strand with starting slot",
+"Muster laden":"Load patterns","Einklappen":"Collapse","Aufklappen":"Expand",
+"Arbeitsschritte":"Work steps","Abschnitte":"Sections","Kumihimo-Scheibe mit 32 Schlitzen":"Kumihimo disk with 32 slots","Vorschau der Kordel":"Cord preview","Abgerolltes Musterbild der Kordel":"Unrolled pattern of the cord","Zeichenmatrix":"Drawing grid","Zeichenmatrix der Bandseiten":"Drawing grid of the braid faces","Ergebnis auf der Kordel, abgerollt":"Result on the cord, unrolled","Eckige Kumihimo-Platte":"Square kumihimo plate","Zurück zum Aufbau":"Back to setup","Bandseite zur Oberkante":"Face towards the top edge","Bandseite zur Unterkante":"Face towards the bottom edge",
+"z. B. Armband Indigo-Zickzack":"e.g. Indigo zigzag bracelet","z. B. Flachband Indigo-Streifen":"e.g. Indigo striped flat braid","Code hier einfügen (beginnt mit {\"kumihimo\"…)":"Paste code here (starts with {\"kumihimo\"…)","Kumihimo-Muster":"Kumihimo pattern","Muster eckig":"Square pattern",
+"Die Datei":"The file","Der Code":"The code",
+/* PDF */
+"FLECHTPLAN · KONGO GUMI":"BRAIDING PLAN · KONGO GUMI","FLECHTPLAN · ECKIGE PLATTE":"BRAIDING PLAN · SQUARE PLATE","Druckdatum":"Print date","Mitwirkung":"Contribution","Claude (Anthropic) - Rechenmodell und Planer":"Claude (Anthropic) - model and planner",
+"1  Aufbau":"1  Setup","2  Flechtplan":"2  Braiding plan","3  Fadenbedarf":"3  Thread requirements","Musterbild (Matrix)":"Pattern (grid)","Paar":"Pair","Schlitz":"Slot","oben":"top","Runde 2":"Round 2",
+"Schlitznummern im Uhrzeigersinn":"Slot numbers clockwise","Schlitznummern gegen den Uhrzeigersinn":"Slot numbers anticlockwise",
+"Die Fäden liegen paarweise links und rechts neben den Markierungen. Ein gleichfarbiges Fadenpaar in gegenüberliegenden Schlitzen kann aus einem doppelt langen Faden bestehen, der über das Loch gefaltet wird.":"The strands lie in pairs to the left and right of the markers. A same-coloured pair in opposite slots can be one double-length thread folded over the hole.",
+"Der Einarbeitungsfaktor hängt von Garn, Gewicht und Zug ab. Am genauesten: 10 cm zur Probe flechten und den verbrauchten Faden messen.":"The take-up factor depends on yarn, weight and tension. Most accurate: braid a 10 cm sample and measure the thread used.",
+"Bei der Anleitung von Fire Mountain Gems werden die Fäden in der Mitte gefaltet; zwei Stränge kommen dann aus einem doppelt so langen Faden. Den Einarbeitungsfaktor am besten mit einer Probe messen.":"In the Fire Mountain Gems instructions the threads are folded in the middle; two strands then come from one double-length thread. Best measure the take-up factor with a sample.",
+"Aus einem Hirn und ein paar Milliarden Parametern: Daniel & Claude":"From one brain and a few billion parameters: Daniel & Claude",
+"Kongo Gumi, 32er-Scheibe":"Kongo Gumi, 32-slot disk","wiederholt sich nicht innerhalb von 12 Durchgängen":"does not repeat within 12 passes"
+};
+// Muster mit Platzhaltern: [Regex, Ersetzung]; werden nacheinander (nicht verankert) angewendet
+const C=s=>colorName(s.trim());
+const SD=s=>SIDE_EN[s]||s;
+const I18N_RULES=[
+[/Faden in Schlitz (\d+), (.+)$/,(_,a,b)=>`Strand in slot ${a}, ${C(b)}`],
+[/Faden Startschlitz (\d+), (.+)$/,(_,a,b)=>`Strand, starting slot ${a}, ${C(b)}`],
+[/Faden in (Oben|Unten|Links|Rechts|Top|Bottom|Left|Right) (\w+), (.+)$/,(_,s,a,b)=>`Strand in ${SD(s)} ${a}, ${C(b)}`],
+[/^Pinsel (.+)$/,(_,b)=>`Brush ${C(b)}`],[/^Farbe (.+)$/,(_,b)=>`Colour ${C(b)}`],
+[/^(.+) laden$/,(_,b)=>`Load ${tx(b)}`],[/^Muster (\d+) übernehmen$/,"Apply pattern $1"],
+[/^(Einklappen|Aufklappen): (.+)$/,(_,a,b)=>`${a==="Einklappen"?"Collapse":"Expand"}: ${tx(b)}`],
+[/^(Oben|Unten|Links|Rechts) (\w+)$/,(_,s,a)=>`${SD(s)} ${a}`],
+[/^(\d+) Fäden · 32 Schlitze$/,"$1 strands · 32 slots"],
+[/^(\d+) Fäden · (\d+) Züge je Durchgang$/,"$1 strands · $2 moves per pass"],
+[/(\d+) Fäden, (\d+) Züge je Durchgang\./,"$1 strands, $2 moves per pass."],[/Züge nach Fire Mountain Gems,$/,"Moves after Fire Mountain Gems,"],[/^„(.+)“$/,"“$1”"],[/^Seite (top|bottom|left|right)$/,(_,a)=>a[0].toUpperCase()+a.slice(1)+" face"],[/ ?Neueste Stiche oben\. Jeder Zug quer über die Platte legt einen Stich auf die Seite, zu der der Faden wandert\./," Newest stitches at the top. Each move across the plate lays a stitch on the face the strand moves to."],
+[/^(\d+) Seiten · (\d+) Durchgänge$/,"$1 faces · $2 passes"],
+[/^(\d+) × (\d+) Stiche$/,"$1 × $2 stitches"],
+[/^(\d+) % passen$/,"$1 % fit"],[/^(\d+) Abweichungen$/,"$1 mismatches"],
+[/^(\d+) Farben?$/,(_,n)=>`${n} colour${n==="1"?"":"s"}`],
+[/^(\d+) Fäden$/,"$1 strands"],[/^1 Faden$/,"1 strand"],
+[/^(\d+) Fäden( · [\d.\/]+)?( · mit Zeichnung)?$/,(_,n,d,m)=>`${n} strands${d||""}${m?" · with drawing":""}`],
+[/^Schritt (\d+)$/,"Move $1"],[/^\(Runde (\d+)\)$/,"(round $1)"],[/^\(Durchgang (\d+)\)$/,"(pass $1)"],
+[/^Zug (\d+) von (\d+)$/,"Move $1 of $2"],[/^Zug (\d+) · Durchgang (\d+)$/,"Move $1 · pass $2"],
+[/^· (.+) · Platz (\d+) von (\d+) in der Musterkette\.$/,(_,c,a,b)=>`· ${C(c)} · position ${a} of ${b} in the pattern chain.`],
+[/^(.+): von$/,(_,c)=>`${C(c)}: from`],
+[/^Stand (.+)$/,"Version $1"],
+[/Nach jedem Schritt die Scheibe gegen den Uhrzeigersinn drehen, bis das nächste Paar oben liegt\. Eine Runde hat (\d+) Schritte; danach geht es genauso weiter, die Paare sind dann um zwei Schlitze gewandert\. Das Muster wiederholt sich alle/,"After each move turn the disk anticlockwise until the next pair is at the top. A round has $1 moves; then it continues the same way, with the pairs shifted by two slots. The pattern repeats every"],
+[/^(\d+) verschiedene Muster mit (\d+) Fäden in$/,"$1 different patterns with $2 strands in"],
+[/^(.+) und$/,(_,c)=>`${C(c)} and`],
+[/^(.+) \(die ersten beiden Pinselfarben\)\. Gefiltert nach Anzahl der Fäden in der selteneren Farbe\. Klick übernimmt das Muster\.$/,(_,c)=>`${C(c)} (the first two brush colours). Filtered by the number of strands in the rarer colour. Click applies the pattern.`],
+[/^Vorlagen für (\d+) Fäden in deinen aktuellen Pinselfarben\. Klick lädt das Muster auf die Scheibe und in den Editor\. Für (\d+) Fäden die Fadenzahl im Editor umstellen\.$/,"Templates for $1 strands in your current brush colours. Click loads the pattern onto the disk and into the editor. For $2 strands switch the strand count in the editor."],
+[/(\d+) von (\d+) gezeichneten Stichen lassen sich so nicht flechten; sie sind rechts markiert\. Beim Kongo Gumi mit (\d+) Fäden wiederholt sich das Muster alle 4 Reihen, und Reihe 3 und 4 sind immer Reihe 1 und 2, um eine halbe Runde \((\d+) Spalten\) versetzt\. Jeder Faden liefert genau diese zwei Stiche\./,"$1 of $2 drawn stitches cannot be braided this way; they are marked on the right. In Kongo Gumi with $3 strands the pattern repeats every 4 rows, and rows 3 and 4 are always rows 1 and 2 shifted by half a round ($4 columns). Each strand supplies exactly these two stitches."],
+[/(\d+) von (\d+) gezeichneten Stichen lassen sich so nicht flechten; sie sind rechts markiert\. Jeder der (\d+) Fäden hat eine feste Farbe und liefert in jedem Durchgang bestimmte Stiche\. Zeig auf eine Zelle, um zu sehen, welche Stiche zum selben Faden gehören\./,"$1 of $2 drawn stitches cannot be braided this way; they are marked on the right. Each of the $3 strands has one fixed colour and supplies certain stitches in every pass. Point at a cell to see which stitches belong to the same strand."],
+[/Deine Zeichnung ist genau so flechtbar\. Sie braucht (\d+) (Farbe|Farben)\./,(_,n)=>`Your drawing can be braided exactly like this. It needs ${n} colour${n==="1"?"":"s"}.`],
+[/ ?(\d+) (Faden war|Fäden waren) durch die Zeichnung nicht festgelegt und (bekommt|bekommen) die häufigste Farbe\./,(_,n)=>` ${n} strand${n==="1"?" was":"s were"} not determined by the drawing and ${n==="1"?"gets":"get"} the most common colour.`],
+[/Der Faden wandert quer über die Platte und legt einen Stich auf die Bandseite (oben|unten|links|rechts)\./,(_,s)=>`The strand moves across the plate and lays a stitch on the ${({oben:"top",unten:"bottom",links:"left",rechts:"right"})[s]} face.`],
+[/Das Farbbild wiederholt sich nach (\d+) (Durchgang|Durchgängen)\. /,(_,n)=>`The colour pattern repeats after ${n} pass${n==="1"?"":"es"}. `],
+[/Das Farbbild wiederholt sich nicht innerhalb von (\d+) Durchgängen\. /,"The colour pattern does not repeat within $1 passes. "],
+[/Ein Durchgang hat (\d+) Züge, davon (\d+) quer über die Platte und (\d+) zum Zurücksetzen\. Danach sind alle Schlitze wieder wie beim Aufbau belegt, aber mit anderen Fäden\./,"A pass has $1 moves: $2 across the plate and $3 resets. Afterwards all slots are occupied as in the setup again, but by different strands."],
+[/ Bei diesem Aufbau liegen die Farben nach jedem Durchgang wieder gleich\./," With this setup the colours are back in place after every pass."],
+[/ Deshalb wechseln die Farben der wandernden Fäden; nach (\d+) Durchgängen liegen sie wieder wie am Anfang\./," So the colours of the moving strands change; after $1 passes they are back where they started."],
+[/ Die Farben wiederholen sich innerhalb von (\d+) Durchgängen nicht\./," The colours do not repeat within $1 passes."],
+[/^„(.+)“ geladen\.$/,"“$1” loaded."],[/^„(.+)“ geladen\. Mit Speichern kommt es zu „Meine Muster“\.$/,"“$1” loaded. Save it to add it to “My patterns”."],
+[/^„(.+)“ gespeichert\.$/,"“$1” saved."],[/^„(.+)“ gespeichert\. Es steht unter „1 Muster“ bei „Meine Muster“\.$/,"“$1” saved. It is listed under “1 Patterns” in “My patterns”."],
+[/^„(.+)“ gelöscht\.$/,"“$1” deleted."],[/^„(.+)“ erstellt\.$/,"“$1” created."],
+[/^(.+) enthält kein Kumihimo-Muster, das ich lesen kann\.$/,(_,a)=>`${tx(a)} contains no Kumihimo pattern I can read.`],
+[/^(\d+) Muster für die runde Scheibe und (\d+) für die eckige Platte/,"$1 pattern(s) for the round disk and $2 for the square plate"],
+[/^(\d+) Muster für die runde Scheibe/,"$1 pattern(s) for the round disk"],[/^(\d+) für die eckige Platte/,"$1 for the square plate"],
+[/ geladen und unter „Meine Muster“ abgelegt/," loaded and added to “My patterns”"],[/ geladen(?=[.;])/," loaded"],[/; (\d+) ohne lesbares Muster/,"; $1 without a readable pattern"],
+[/^Speichern im Artefakt hat nicht geklappt \((.+)\)\. Ich lege es in diesem Browser ab\.$/,"Saving in the artifact failed ($1). I am storing it in this browser."],
+/* PDF */
+[/^(\d+) Fäden · runde Scheibe mit 32 Schlitzen$/,"$1 strands · round disk with 32 slots"],
+[/^(.+) · Platte 1-12 \/ A-H$/,(_,a)=>`${tx(a)} · plate 1-12 / A-H`],
+[/^(\d+) \((\d+) Farben: (.+)\)$/,(_,n,k,l)=>`${n} (${k} colours: ${l.split(", ").map(x=>{const m=/^(.+) (\d+)$/.exec(x);return m?C(m[1])+" "+m[2]:x;}).join(", ")})`],
+[/^Muster wiederholt sich alle (\d+) Schritte$/,"Pattern repeats every $1 moves"],
+[/^(\d+) Züge, davon (\d+) quer und (\d+) zum Zurücksetzen$/,"$1 moves: $2 across and $3 resets"],
+[/^Farben liegen nach (\d+) (Durchgang|Durchgängen) wieder wie am Anfang$/,(_,n)=>`Colours are back in place after ${n} pass${n==="1"?"":"es"}`],
+[/^Spalte = Stich rundum, Zeile = halbe Runde \((\d+) Schritte\), oben = später geflochten\. Senkrechte Streifen laufen auf der Kordel als Spiralen\.$/,"Column = stitch around the cord, row = half a round ($1 moves), top = braided later. Vertical stripes run around the cord as spirals."],
+[/^Jeder Schritt: Den Faden oben rechts nach unten rechts legen, den Faden unten links nach oben links legen, dann die Scheibe gegen den Uhrzeigersinn drehen, bis das nächste Paar oben liegt\. Eine Runde hat (\d+) Schritte\. Danach geht es genauso weiter; die Paare wandern dabei pro Runde um zwei Schlitze\. Das Muster wiederholt sich alle (\d+) Schritte\.$/,"Each move: lay the strand at top right to bottom right, lay the strand at bottom left to top left, then turn the disk anticlockwise until the next pair is at the top. A round has $1 moves. Then it continues the same way; the pairs shift two slots per round. The pattern repeats every $2 moves."],
+[/^Die Platte wird nicht gedreht\. Ein Durchgang hat (\d+) Züge\. Danach sind wieder dieselben Schlitze belegt, aber mit anderen Fäden; deshalb wechseln die Farben der wandernden Fäden\.( Nach (\d+) (Durchgang|Durchgängen) liegen die Farben wieder wie am Anfang\.)?$/,(_,n,x,p)=>`The plate is not turned. A pass has ${n} moves. Afterwards the same slots are occupied again, but by different strands; that is why the colours of the moving strands change.${x?` After ${p} pass${p==="1"?"":"es"} the colours are back where they started.`:""}`],
+[/^Fertige Länge (\d+) cm · Einarbeitungsfaktor ([\d,.]+) · Zugabe (\d+) cm je Strang\. Länge je Strang = Länge × Faktor \+ Zugabe\.$/,(_,a,f,z)=>`Finished length ${a} cm · take-up factor ${f.replace(",",".")} · allowance ${z} cm per strand. Length per strand = length × factor + allowance.`],
+[/^Seite (\d+) von (\d+)$/,"Page $1 of $2"],
+[/^Kumihimo-Planer  ·  (.+)$/,"Kumihimo Planner  ·  $1"],
+[/^Züge nach Fire Mountain Gems, "(.+)" \(dort Schritte 5 bis 18\)\.$/,"Moves after Fire Mountain Gems, \"$1\" (steps 5 to 18 there)."],
+[/^Züge nach Fire Mountain Gems, "(.+)"\. Seitenbuchstaben A–H von oben nach unten\.$/,"Moves after Fire Mountain Gems, \"$1\". Side letters A–H from top to bottom."],
+[/^(.+) (\d+)$/,(m,c,n)=>COLOR_EN[c]?`${COLOR_EN[c]} ${n}`:m]
+];
+function tx(s){
+  if(LANG!=="en"||typeof s!=="string")return s;
+  const lead=s.match(/^\s*/)[0],trail=s.match(/\s*$/)[0],t=s.trim();
+  if(!t)return s;
+  if(Object.prototype.hasOwnProperty.call(I18N_EXACT,t))return lead+I18N_EXACT[t]+trail;
+  if(COLOR_EN[t])return lead+COLOR_EN[t]+trail;
+  let r=t;
+  for(const [re,rep] of I18N_RULES){const g=new RegExp(re.source,re.flags);if(g.test(r))r=r.replace(g,rep);}
+  return lead+r+trail;
+}
+function i18nNode(n){
+  if(n.nodeType===3){const pe=n.parentElement;if(!pe||pe.closest("script,style,textarea"))return;const v=n.nodeValue;if(!/[A-Za-zÄÖÜäöüß]/.test(v))return;const r=tx(v);if(r!==v)n.nodeValue=r;return;}
+  if(n.nodeType!==1||n.matches("script,style"))return;
+  for(const a of ["placeholder","aria-label","title"]){if(n.hasAttribute(a)){const v=n.getAttribute(a),r=tx(v);if(r!==v)n.setAttribute(a,r);}}
+  for(const c of n.childNodes)i18nNode(c);
+}
+if(LANG==="en"){
+  document.documentElement.lang="en";document.title="Kumihimo Planner";
+  i18nNode(document.body);
+  new MutationObserver(ms=>{for(const m of ms){
+    if(m.type==="characterData")i18nNode(m.target);
+    else if(m.type==="attributes")i18nNode(m.target);
+    else m.addedNodes.forEach(i18nNode);
+  }}).observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:["placeholder","aria-label","title"]});
+}
+
 const SL=32, DEG=360/SL, SVGNS="http://www.w3.org/2000/svg";
 const RM=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const DEFAULT_PAL=[["#2F3E77","Indigo"],["#EDE6D6","Elfenbein"],["#B8432F","Zinnober"],["#7E9B84","Salbei"],["#D2A23A","Senf"],["#26272D","Tinte"]];
+DEFAULT_PAL.forEach(p=>p[1]=colorName(p[1]));
 const S={n:16,pal:DEFAULT_PAL.map(p=>p[0]),names:DEFAULT_PAL.map(p=>p[1]),brush:0,col:[],cw:true,step:0,spin:!RM,hover:-1,catSpots:2};
 const mod=(a,m)=>((a%m)+m)%m;
 let SIM=null, NECK=[], KSIM=240;
@@ -727,7 +929,7 @@ function renderSwatches(){
     $(inp).value=S.pal[S.brush]; $(nm).textContent=S.names[S.brush];
   }
 }
-for(const id of ["edColorIn"])$(id).addEventListener("input",e=>{S.pal[S.brush]=e.target.value;S.names[S.brush]="Farbe "+(S.brush+1);renderSwatches();refresh();});
+for(const id of ["edColorIn"])$(id).addEventListener("input",e=>{S.pal[S.brush]=e.target.value;S.names[S.brush]=colorWord()+(S.brush+1);renderSwatches();refresh();});
 for(const id of ["edN"])$(id).addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const n=+b.dataset.n;if(n===S.n)return;S.n=n;rebuild();S.col=defaultColors(n);S.step=0;buildDisk();refresh(true);});
 $("segDir").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.cw=b.dataset.cw==="1";buildDisk();refresh();});
 function syncSeg(){[...$("edN").children].forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.n===S.n)));[...$("segDir").children].forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.cw==="1")===S.cw)));}
@@ -978,7 +1180,7 @@ function renderMaterial(){
   h+=`<tr><td><b>Summe</b></td><td class="num">${S.n}</td><td></td><td class="num"><b>${fmt(tot)}</b></td><td></td></tr>`;
   $("matBody").innerHTML=h;
 }
-const fmt=cm=>cm>=100?(cm/100).toLocaleString("de-AT",{maximumFractionDigits:2})+" m":Math.round(cm)+" cm";
+const fmt=cm=>cm>=100?(cm/100).toLocaleString(LOC,{maximumFractionDigits:2})+" m":Math.round(cm)+" cm";
 ["inLen","inFac","inAdd"].forEach(id=>$(id).addEventListener("input",renderMaterial));
 
 /* ---------- catalog ---------- */
@@ -1055,9 +1257,9 @@ function validRecord(o){
 }
 function fullPal(p){
   const pal=p.pal.slice(), names=p.names.slice(0,pal.length);
-  while(names.length<pal.length)names.push("Farbe "+(names.length+1));
+  while(names.length<pal.length)names.push(colorWord()+(names.length+1));
   for(const [h,nm] of DEFAULT_PAL){if(pal.length>=6)break;if(!pal.includes(h)){pal.push(h);names.push(nm);}}
-  return {pal,names};
+  return {pal,names:names.map(colorName)};
 }
 function applyPattern(p,fromTpl){
   if(!fromTpl&&p.pal.length){const f=fullPal(p);S.pal=f.pal;S.names=f.names;}
@@ -1083,7 +1285,7 @@ function renderLibrary(){
     $("libNote").textContent=DB?"Deine gespeicherten Muster. Sie liegen beim Artefakt und sind auf jedem Gerät da, auf dem du den Planer öffnest.":"Deine gespeicherten Muster. Sie liegen in diesem Browser; mit „Als Datei speichern“ oder „Code kopieren“ nimmst du sie mit.";
     if(!OWN.length){const e=document.createElement("div");e.className="empty";e.textContent="Noch keine eigenen Muster. Gib unten einen Namen ein und tippe auf Speichern.";g.appendChild(e);return;}
     OWN.forEach(p=>{
-      const d=p.saved?new Date(p.saved).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
+      const d=p.saved?new Date(p.saved).toLocaleDateString(LOC,{day:"2-digit",month:"2-digit",year:"numeric"}):"";
       const t=tile(p.name,thumb(p.n,p.neck,fullPal(p).pal,128,92),`${p.n} Fäden${d?" · "+d:""}${p.matrix?" · mit Zeichnung":""}`);
       t.onclick=e=>{if(e.target.closest(".del"))return;applyPattern(p);setName(p.name);msg(`„${p.name}“ geladen.`);showSub("rund","editor");};
       const del=document.createElement("span");del.className="del";del.setAttribute("role","button");del.tabIndex=0;del.title="Löschen";del.textContent="×";
@@ -1333,9 +1535,10 @@ const PT={prim:"#14304f",zweit:"#22496e",text:"#1a1a1a",leise:"#6c7680",linie:"#
 const URHEBER="Aus einem Hirn und ein paar Milliarden Parametern: Daniel & Claude";
 function buildPdf(jsPDF){
   const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+  {const _t=doc.text.bind(doc);doc.text=(t,...a)=>_t(Array.isArray(t)?t.map(tx):tx(t),...a);const _s=doc.splitTextToSize.bind(doc);doc.splitTextToSize=(t,...a)=>_s(tx(t),...a);}
   const W=210,H=297,ML=18,MR=18,MT=24,MB=20,CW=W-ML-MR;
   const name=($("pdfName").value||"").trim()||"Kumihimo-Muster";
-  const date=new Date().toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const date=new Date().toLocaleDateString(LOC,{day:"2-digit",month:"2-digit",year:"numeric"});
   const n=S.n,G=n/2,sim=SIM,rgbA=h=>rgb(h);
   const col=c=>doc.setTextColor(...rgbA(c)), draw=c=>doc.setDrawColor(...rgbA(c)), fill=c=>doc.setFillColor(...rgbA(c));
   const font=(f,st,sz)=>{doc.setFont(f,st);doc.setFontSize(sz);};
@@ -1357,7 +1560,7 @@ function buildPdf(jsPDF){
     ["Rapport",`Muster wiederholt sich alle ${patternPeriod()} Schritte`],["Zählung",S.cw?"Schlitznummern im Uhrzeigersinn":"Schlitznummern gegen den Uhrzeigersinn"],
     ["Mitwirkung","Claude (Anthropic) - Rechenmodell und Planer"]];
   draw(PT.linie);doc.setLineWidth(0.15);doc.line(ML,y,ML+CW,y);y+=4.5;
-  meta.forEach(([k,v])=>{font("helvetica","normal",7);col(PT.leise);doc.setCharSpace(0.3);doc.text(k.toUpperCase(),ML,y);doc.setCharSpace(0);font("helvetica","normal",9);col(PT.text);doc.text(doc.splitTextToSize(v,CW-30)[0],ML+30,y);y+=4.6;});
+  meta.forEach(([k,v])=>{font("helvetica","normal",7);col(PT.leise);doc.setCharSpace(0.3);doc.text(tx(k).toUpperCase(),ML,y);doc.setCharSpace(0);font("helvetica","normal",9);col(PT.text);doc.text(doc.splitTextToSize(v,CW-30)[0],ML+30,y);y+=4.6;});
   y-=1;doc.line(ML,y,ML+CW,y);y+=4;
 
   // ── 1 Aufbau
@@ -1452,7 +1655,7 @@ $("bPdf").onclick=async()=>{
   try{
     const lib=await loadJsPdf();
     const {doc,name}=buildPdf(lib.jsPDF);
-    const fname="Flechtplan-"+slug(name)+".pdf",blob=doc.output("blob");
+    const fname=(LANG==="en"?"Braiding-plan-":"Flechtplan-")+slug(name)+".pdf",blob=doc.output("blob");
     if(DL){
       try{await DL.save({filename:fname,data:blob});pm("PDF gespeichert.");}
       catch(e){const c=e&&e.code;pm(c==="declined"?"Speichern abgebrochen.":c==="rate_limited"?"Es ist schon ein Speicherdialog offen.":"Das PDF ließ sich hier nicht speichern.");}
@@ -1460,7 +1663,7 @@ $("bPdf").onclick=async()=>{
       const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);
       pm(`„${fname}“ erstellt.`);
     }else pm("Dateien lassen sich in dieser Ansicht nicht speichern.");
-  }catch(e){pm("Die PDF-Bibliothek konnte nicht geladen werden. Für den Export ist eine Internetverbindung nötig.");}
+  }catch(e){console.error(e);pm(e&&e.message==="load"?"Die PDF-Bibliothek konnte nicht geladen werden. Für den Export ist eine Internetverbindung nötig.":"Das PDF konnte nicht erstellt werden.");}
   finally{btn.disabled=false;}
 };
 
@@ -1496,7 +1699,7 @@ const Q={struct:"flach8",col:null,step:0,hover:-1};
 const QCYC=12;
 let QSIM=null;
 const qParse=id=>({side:id[0],i:/[A-H]/.test(id[1])?id.charCodeAt(1)-64:+id.slice(1)});
-const qSideName={T:"Oben",B:"Unten",L:"Links",R:"Rechts"};
+const qSideName=LANG==="en"?{T:"Top",B:"Bottom",L:"Left",R:"Right"}:{T:"Oben",B:"Unten",L:"Links",R:"Rechts"};
 const qLabel=id=>{const p=qParse(id);return `${qSideName[p.side]} ${p.side==="L"||p.side==="R"?String.fromCharCode(64+p.i):p.i}`;};
 function qPos(id,inset){
   const p=qParse(id),d=inset==null?112:inset;
@@ -1555,7 +1758,7 @@ function qRenderToolbar(){
   });
   $("qStructNote").innerHTML=`${stc.setup.length} Fäden, ${stc.moves.length} Züge je Durchgang. ${stc.source}`;
 }
-$("qColorIn").addEventListener("input",e=>{S.pal[S.brush]=e.target.value;S.names[S.brush]="Farbe "+(S.brush+1);qRender();save();});
+$("qColorIn").addEventListener("input",e=>{S.pal[S.brush]=e.target.value;S.names[S.brush]=colorWord()+(S.brush+1);qRender();save();});
 
 /* plate */
 const qSvg=$("qPlate");
@@ -1838,7 +2041,7 @@ function qRenderOwn(){
   $("qOwnNote").textContent=DB?"Gespeicherte Muster für die eckige Platte. Sie liegen beim Artefakt.":"Gespeicherte Muster für die eckige Platte. Sie liegen in diesem Browser; mit „Als Datei speichern“ nimmst du sie mit. Speichern unter Export.";
   if(!QOWN.length){const e=document.createElement("div");e.className="empty";e.textContent="Noch keine eigenen Muster. Unter „4 Export“ gibst du einen Namen ein und tippst auf Speichern.";g.appendChild(e);return;}
   QOWN.forEach(p=>{
-    const pal=fullPal(p).pal,d=p.saved?new Date(p.saved).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
+    const pal=fullPal(p).pal,d=p.saved?new Date(p.saved).toLocaleDateString(LOC,{day:"2-digit",month:"2-digit",year:"numeric"}):"";
     const t=document.createElement("button");t.type="button";t.className="tile qtile";t.setAttribute("aria-label",p.name+" laden");
     t.innerHTML=qChipRows(p.struct,p.col,pal)+"<b></b><span></span>";
     t.querySelector("b").textContent=p.name;t.querySelector("span").textContent=`${QSTRUCTS[p.struct].name}${d?" · "+d:""}`;
@@ -1888,9 +2091,10 @@ $("qFileIn").addEventListener("change",async e=>{const files=[...(e.target.files
 /* PDF eckig */
 function buildPdfQ(jsPDF){
   const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+  {const _t=doc.text.bind(doc);doc.text=(t,...a)=>_t(Array.isArray(t)?t.map(tx):tx(t),...a);const _s=doc.splitTextToSize.bind(doc);doc.splitTextToSize=(t,...a)=>_s(tx(t),...a);}
   const W=210,H=297,ML=18,MR=18,MT=24,MB=20,CW=W-ML-MR,st=QSTRUCTS[Q.struct];
   const name=($("qPdfName").value||"").trim()||"Kumihimo-Muster";
-  const date=new Date().toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const date=new Date().toLocaleDateString(LOC,{day:"2-digit",month:"2-digit",year:"numeric"});
   const col=c=>doc.setTextColor(...rgb(c)),draw=c=>doc.setDrawColor(...rgb(c)),fill=c=>doc.setFillColor(...rgb(c)),font=(f,t,z)=>{doc.setFont(f,t);doc.setFontSize(z);};
   let y=MT;const need=h=>{if(y+h>H-MB){doc.addPage();y=MT+4;}};
   const chipAt=(x,yy,hex,r=1.5)=>{fill(hex);draw(lum(hex)>0.8?PT.leise:mixHex(hex,"#000000",.35));doc.setLineWidth(0.2);doc.circle(x,yy,r,"FD");};
@@ -1908,7 +2112,7 @@ function buildPdfQ(jsPDF){
     ["Rapport",period?`Farben liegen nach ${period} ${period===1?"Durchgang":"Durchgängen"} wieder wie am Anfang`:"wiederholt sich nicht innerhalb von 12 Durchgängen"],
     ["Mitwirkung","Claude (Anthropic) - Rechenmodell und Planer"]];
   draw(PT.linie);doc.setLineWidth(0.15);doc.line(ML,y,ML+CW,y);y+=4.5;
-  meta.forEach(([k,v])=>{font("helvetica","normal",7);col(PT.leise);doc.setCharSpace(0.3);doc.text(k.toUpperCase(),ML,y);doc.setCharSpace(0);font("helvetica","normal",9);col(PT.text);doc.text(doc.splitTextToSize(v,CW-30)[0],ML+30,y);y+=4.6;});
+  meta.forEach(([k,v])=>{font("helvetica","normal",7);col(PT.leise);doc.setCharSpace(0.3);doc.text(tx(k).toUpperCase(),ML,y);doc.setCharSpace(0);font("helvetica","normal",9);col(PT.text);doc.text(doc.splitTextToSize(v,CW-30)[0],ML+30,y);y+=4.6;});
   y-=1;doc.line(ML,y,ML+CW,y);y+=4;
   // 1 Aufbau: plate
   h2("1  Aufbau");
@@ -1919,9 +2123,9 @@ function buildPdfQ(jsPDF){
   for(let j=1;j<=8;j++){const yy=cy+(-70+(j-1)*20)*sc,L=String.fromCharCode(64+j);doc.line(cx-130*sc,yy,cx-120*sc,yy);doc.line(cx+130*sc,yy,cx+120*sc,yy);doc.text(L,cx-136*sc,yy+0.8,{align:"center"});doc.text(L,cx+136*sc,yy+0.8,{align:"center"});}
   st.setup.forEach((id,s)=>{const [px,py]=P(id),a=Math.atan2(py-cy,px-cx);draw(PT.linie);doc.setLineWidth(0.2);doc.line(cx+14*sc*Math.cos(a),cy+14*sc*Math.sin(a),px,py);chipAt(px,py,S.pal[Q.col[s]],1.9);});
   // setup table right of plate
-  let ty=y+6;const tx=ML+98;
-  font("helvetica","bold",8);col(PT.leise);doc.text("Schlitz",tx,ty);doc.text("Farbe",tx+26,ty);ty+=1.6;draw(PT.prim);doc.setLineWidth(0.3);doc.line(tx,ty,ML+CW,ty);ty+=4.2;
-  st.setup.forEach((id,s)=>{if(s%2){fill(PT.zebra);doc.rect(tx,ty-4,ML+CW-tx,6,"F");}font("helvetica","normal",9.5);col(PT.text);doc.text(qLabel(id),tx,ty);chipAt(tx+27.5,ty-1.1,S.pal[Q.col[s]]);col(PT.text);doc.text(S.names[Q.col[s]],tx+31,ty);ty+=6;});
+  let ty=y+6;const tX=ML+98;
+  font("helvetica","bold",8);col(PT.leise);doc.text("Schlitz",tX,ty);doc.text("Farbe",tX+26,ty);ty+=1.6;draw(PT.prim);doc.setLineWidth(0.3);doc.line(tX,ty,ML+CW,ty);ty+=4.2;
+  st.setup.forEach((id,s)=>{if(s%2){fill(PT.zebra);doc.rect(tX,ty-4,ML+CW-tX,6,"F");}font("helvetica","normal",9.5);col(PT.text);doc.text(qLabel(id),tX,ty);chipAt(tX+27.5,ty-1.1,S.pal[Q.col[s]]);col(PT.text);doc.text(S.names[Q.col[s]],tX+31,ty);ty+=6;});
   y=Math.max(cy+42,ty)+2;
   para(st.source.replace(/<[^>]+>/g,"").replace(/[„“]/g,'"'),8.5,PT.leise);
   // 2 Flechtplan
@@ -1958,11 +2162,11 @@ function buildPdfQ(jsPDF){
 }
 $("qbPdf").onclick=async()=>{
   const btn=$("qbPdf"),pm=t=>{$("qPdfMsg").textContent=t;};btn.disabled=true;pm("PDF wird erstellt …");
-  try{const lib=await loadJsPdf();const {doc,name}=buildPdfQ(lib.jsPDF);const fname="Flechtplan-"+slug(name)+".pdf",blob=doc.output("blob");
+  try{const lib=await loadJsPdf();const {doc,name}=buildPdfQ(lib.jsPDF);const fname=(LANG==="en"?"Braiding-plan-":"Flechtplan-")+slug(name)+".pdf",blob=doc.output("blob");
     if(DL){try{await DL.save({filename:fname,data:blob});pm("PDF gespeichert.");}catch(e){const c=e&&e.code;pm(c==="declined"?"Speichern abgebrochen.":c==="rate_limited"?"Es ist schon ein Speicherdialog offen.":"Das PDF ließ sich hier nicht speichern.");}}
     else if(!window.claude){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);pm(`„${fname}“ erstellt.`);}
     else pm("Dateien lassen sich in dieser Ansicht nicht speichern.");
-  }catch(e){pm("Die PDF-Bibliothek konnte nicht geladen werden. Für den Export ist eine Internetverbindung nötig.");}
+  }catch(e){console.error(e);pm(e&&e.message==="load"?"Die PDF-Bibliothek konnte nicht geladen werden. Für den Export ist eine Internetverbindung nötig.":"Das PDF konnte nicht erstellt werden.");}
   finally{btn.disabled=false;}
 };
 QOWN=qLocalOwn();
@@ -2024,10 +2228,10 @@ initCollapsibles();
 
 
 /* ---------- Kopf: Version, ZIP, Copyright ---------- */
-const BUILD="24.09.2026 14:41";
+const BUILD="24.09.2026 14:54";
 $("verInfo").textContent="Stand "+BUILD;
 $("cpYear").textContent=String(Math.max(2026,new Date().getFullYear()));
-const ZIPFILES=["kumihimo-planer.html","README.html","README.md","kumihimo_modell.py","Muster/4-farben-spirale.json","Muster/band-rot-orange-gelb-weiss.json"];
+const ZIPFILES=["kumihimo-planer.html","README.html","README.md","README.en.html","README.en.md","kumihimo_modell.py","Muster/4-farben-spirale.json","Muster/band-rot-orange-gelb-weiss.json"];
 let jszipP=null;
 function loadJsZip(){if(window.JSZip)return Promise.resolve(window.JSZip);if(!jszipP)jszipP=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";sc.onload=()=>window.JSZip?res(window.JSZip):rej(new Error("jszip"));sc.onerror=()=>{jszipP=null;rej(new Error("load"));};document.head.appendChild(sc);});return jszipP;}
 $("lnkZip").addEventListener("click",async e=>{
@@ -2046,6 +2250,11 @@ $("lnkZip").addEventListener("click",async e=>{
 $("cpCopy").onclick=()=>{const t="dertl@web.de";const done=()=>{$("cpCopy").textContent="kopiert";setTimeout(()=>$("cpCopy").textContent="kopieren",1500);};
   try{navigator.clipboard.writeText(t).then(done,()=>{const r=document.createRange();r.selectNodeContents($("cpMail"));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);});}catch(e){}};
 
+
+/* ---------- Sprachumschalter ---------- */
+$$("#langSeg [data-lang]").forEach(b=>{b.setAttribute("aria-pressed",String(b.dataset.lang===LANG));b.onclick=()=>{if(b.dataset.lang===LANG)return;try{localStorage.setItem("kumihimo-lang",b.dataset.lang);}catch(e){}location.reload();};});
+if(LANG==="en")$("lnkReadme").setAttribute("href","README.en.html");
+
 /* ---------- refresh ---------- */
 let catTimer=0;
 function refresh(full){
@@ -2060,7 +2269,7 @@ const mq=window.matchMedia("(prefers-color-scheme: dark)");mq.addEventListener&&
 new MutationObserver(()=>{cssCache={};renderChart();renderCord();renderCatalog();}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
 /* ---------- init ---------- */
-const had=load(); rebuild(); if(!had)S.col=defaultColors(S.n);
+const had=load(); S.names=S.names.map(colorName); rebuild(); if(!had)S.col=defaultColors(S.n);
 if(!edLoad())edDefault();
 buildDisk(); refresh(true); initStores();
 new ResizeObserver(()=>edRender(false)).observe($("editor"));

@@ -11,6 +11,7 @@ Aus einem Muster berechnet er Startaufbau, Flechtschritte und Fadenbedarf; der F
 | `kumihimo_modell.py` | Dasselbe Rechenmodell in Python, zum Nachrechnen und Weiterentwickeln. |
 | `Muster/` | Gespeicherte Muster als JSON-Dateien. |
 | `README.md` / `README.html` | Diese Anleitung (als Text bzw. für den Browser). |
+| `README.en.md` / `README.en.html` | Die Anleitung auf Englisch. |
 | `kumihimo-planer.zip` | Alles oben in einem Paket, immer die aktuelle Version. |
 
 „Meine Muster“ speichert der Planer im jeweiligen Browser.
@@ -35,7 +36,7 @@ Gut zu wissen:
 
 ## Bedienung
 
-Oben wählst du die Scheibe (**Runde Scheibe** oder **Eckige Scheibe**), darunter die Arbeitsschritte:
+Oben rechts schaltest du die Sprache um (**DE** / **EN**); der Browser merkt sich die Wahl. Oben wählst du die Scheibe (**Runde Scheibe** oder **Eckige Scheibe**), darunter die Arbeitsschritte:
 
 1. **Muster**: Vorlagen, eigene Muster und (rund) der Musterkatalog. Ein Klick lädt das Muster und öffnet den Editor; alle weiteren Schritte werden mit aktualisiert.
 2. **Editor**: Fadenzahl und Farben wählen und in die Matrix malen (rund) bzw. die Fäden auf der Platte färben (eckig). Rechts das flechtbare Ergebnis und „So passt es“. „Auf die Scheibe übernehmen“ springt zur Flechtanleitung.

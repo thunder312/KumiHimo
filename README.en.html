@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kumihimo Planner · Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono&display=swap">
+<style>
+:root{--bg:#EDEFF2;--surface:#FAFBFC;--ink:#1C2030;--muted:#5C6376;--line:#D2D6DE;--accent:#2F4A8A;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#12141A;--surface:#1A1D26;--ink:#E4E7EE;--muted:#9BA1B3;--line:#2D3240;--accent:#93A6E8;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:32px 16px 64px}
+h1,h2{font-family:"Shippori Mincho",Georgia,serif;line-height:1.2} h1{font-size:34px} h2{margin-top:36px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+a{color:var(--accent)} code{font-family:"IBM Plex Mono",monospace;font-size:13px;background:var(--surface);padding:1px 4px;border-radius:4px}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto} pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%} th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.stand{color:var(--muted);font-size:13px}
+</style></head><body><main><p class="stand">Version 24.09.2026 14:54</p>
+<h1>KumiHimo – Kumihimo Planner</h1>
+<p>A planner for kumihimo on the round disk with 32 slots (Kongo Gumi, 8 or 16 strands) and the square plate (1–12 / A–H; flat braid and square braid with 8 strands each).
+From a pattern it works out the starting setup, the braiding moves and the thread requirements; the braiding plan can be exported as a PDF.</p>
+<h2>Contents of the folder</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kumihimo-planer.html</code></td>
+<td>The program. Double-click to open it in the browser; it also works offline.</td>
+</tr>
+<tr>
+<td><code>kumihimo_modell.py</code></td>
+<td>The same model in Python, for checking and further development.</td>
+</tr>
+<tr>
+<td><code>Muster/</code></td>
+<td>Saved patterns as JSON files.</td>
+</tr>
+<tr>
+<td><code>README.en.md</code> / <code>README.en.html</code></td>
+<td>This guide (as text or for the browser).</td>
+</tr>
+<tr>
+<td><code>README.md</code> / <code>README.html</code></td>
+<td>The guide in German.</td>
+</tr>
+<tr>
+<td><code>kumihimo-planer.zip</code></td>
+<td>Everything above in one package, always the current version.</td>
+</tr>
+</tbody>
+</table>
+<p>The planner keeps “My patterns” in the browser you use.
+Only the files in the <code>Muster</code> folder are permanent.</p>
+<h2>Running it at home in the browser</h2>
+<p>The planner is a single HTML file and needs no installation and no server.</p>
+<ol>
+<li><strong>Download and unpack the ZIP</strong>, for example to <code>Documents\KumiHimo</code>. Important: really unpack it, do not open it from inside the ZIP.</li>
+<li><strong>Double-click <code>kumihimo-planer.html</code>.</strong> It opens in your default browser (current Chrome, Edge or Firefox).</li>
+<li><strong>Load patterns:</strong> under “Export” or “Patterns” click “Open files” and choose files from the <code>Muster</code> folder (several at once work).</li>
+<li><strong>Keep patterns:</strong> “Save as file” puts a JSON file in your downloads folder; move it into the <code>Muster</code> folder.</li>
+</ol>
+<p>Good to know:</p>
+<ul>
+<li><strong>Offline:</strong> planner, editor and braiding guide work without internet. Only the PDF export loads the PDF library jsPDF from the internet the first time; without a connection, fallback fonts are also shown.</li>
+<li><strong>“My patterns” lives in the browser</strong>, not in the folder. A different browser, a different location of the HTML file or clearing browser data shows an empty list. Only the files in the <code>Muster</code> folder are permanent.</li>
+<li><strong>Guide:</strong> <code>README.en.html</code> in the same folder; the “Guide” button in the planner opens it.</li>
+<li><strong>Tablet or phone:</strong> local HTML files are often awkward to open there. It is easier to put the folder on a web server, for example with GitHub Pages in the repository <a href="https://github.com/thunder312/KumiHimo">thunder312/KumiHimo</a> (Settings → Pages → branch <code>main</code>). Then you open the planner through a normal web address.</li>
+<li><strong>New version:</strong> simply unpack the new ZIP over the old folder. The <code>Muster</code> folder stays as long as you do not overwrite your own files.</li>
+</ul>
+<h2>How to use it</h2>
+<p>Top right you switch the language (<strong>DE</strong> / <strong>EN</strong>); the browser remembers your choice. At the top you choose the tool (<strong>Round disk</strong> or <strong>Square plate</strong>), below that the work steps:</p>
+<ol>
+<li><strong>Patterns</strong>: templates, your own patterns and (round disk) the pattern catalogue. A click loads the pattern and opens the editor; all later steps are updated.</li>
+<li><strong>Editor</strong>: choose strand count and colours and paint in the grid (round disk) or on the braid faces (square plate). On the right you see the braidable result and “How well it fits”. “Apply to disk” jumps to the braiding guide.</li>
+<li><strong>Braiding guide</strong> (view only, colours come from Patterns and Editor): numbering direction, disk move by move, cord and pattern image, setup and braiding plan, thread requirements.</li>
+<li><strong>Export</strong>: save patterns (My patterns, file, code) and the braiding plan as PDF.</li>
+</ol>
+<p>Each large section (e.g. Pattern editor, Disk and cord, Thread requirements) can be collapsed with the arrow on the right; the browser remembers this, as well as the last open work step.
+For the PDF export the PDF library jsPDF is loaded from the internet once.</p>
+<h2>Square plate tab (first version)</h2>
+<ul>
+<li>Plate with slots 1–12 at the top and bottom, A–H on the left and right (from top to bottom); the plate is not turned.</li>
+<li>Braid type “Flat braid, 8 strands” with the moves after Fire Mountain Gems (steps 5–18): 14 moves per pass, 8 of them across the plate, 6 resets.</li>
+<li>Braid type “Square braid, 8 strands” after Fire Mountain Gems (Square Braids): 12 moves per pass, 8 across, 4 resets; the braid image shows all four faces.</li>
+<li>Pattern editor: paint freely on all braid faces (columns = target slots of that face, row groups = passes); the planner finds the braidable setup (majority per strand) and applies it with “Apply to plate”.</li>
+<li>In the braiding guide the plate is view only; setup templates: Top/bottom, Alternating, Outer/inner, Single colour.</li>
+<li>Step through move by move, braiding plan for two passes, thread requirements.</li>
+<li>Export: save patterns (My patterns, file, code) and the braiding plan as A4 PDF (plate image, setup, moves for two passes, thread requirements). Saved patterns appear under “1 Patterns” → “My patterns”.</li>
+<li>“Open files” accepts round and square patterns in both tabs and sorts them correctly.</li>
+<li>The braid image is schematic (stitch on the face the strand moves to) and has not yet been checked against a real braid.</li>
+</ul>
+<h2>Kongo Gumi rules (result of the model)</h2>
+<ul>
+<li><strong>Move:</strong> top right to bottom right, bottom left to top left, then turn the disk anticlockwise until the next pair is at the top.</li>
+<li><strong>Stitches:</strong> each move lays two stitches. The strands move in a fixed order, the pattern chain.</li>
+<li><strong>Repeat:</strong> in the grid every pattern repeats every 4 rows.</li>
+<li><strong>Twin stitch:</strong> row r+2 is row r shifted by half a round. Each strand supplies exactly these two stitches.</li>
+<li><strong>Lengthwise:</strong> stripes in up to 4 colours are possible, each colour appears twice, opposite each other. On the cord they become spirals.</li>
+<li><strong>Crosswise:</strong> full rings are only possible in 2 alternating colours.</li>
+<li><strong>Check:</strong> 16 strands in 2 colours give 1162 different patterns, as in the article “Changing Spots” (Bridges 2022).</li>
+</ul>
+<p>The stitch shape in the previews is schematic. The take-up factor for the thread requirements (default 1.5) should be measured with a sample.</p>
+<h2>Pattern file format</h2>
+<pre><code class="language-json">{
+  &quot;kumihimo&quot;: 1,
+  &quot;name&quot;: &quot;Band rot-orange-gelb-weiß&quot;,
+  &quot;n&quot;: 16,
+  &quot;neck&quot;: &quot;0321032103210321&quot;,
+  &quot;pal&quot;: [&quot;#C0392B&quot;, &quot;#E67E22&quot;, &quot;#F1C40F&quot;, &quot;#F7F4EC&quot;],
+  &quot;names&quot;: [&quot;Rot&quot;, &quot;Orange&quot;, &quot;Gelb&quot;, &quot;Weiß&quot;],
+  &quot;matrix&quot;: [&quot;01230123&quot;, &quot;...&quot;]
+}
+</code></pre>
+<ul>
+<li><code>n</code>: number of strands (8 or 16).</li>
+<li><code>neck</code>: colour number for each position of the pattern chain (index into <code>pal</code>).</li>
+<li><code>pal</code>, <code>names</code>: colours as hex codes and their names.</li>
+<li><code>matrix</code> (optional): the editor drawing, rows from top to bottom, <code>.</code> is an empty cell.</li>
+</ul>
+<p>Square plate patterns have <code>"typ": "eckig"</code>, plus <code>struct</code> (<code>flach8</code> or <code>vierkant8</code>), <code>col</code> (colour number per strand in setup order) and optionally <code>editor</code> with the drawings per braid face.</p>
+<h2>Python model</h2>
+<pre><code>python kumihimo_modell.py muster Muster/band-rot-orange-gelb-weiss.json
+python kumihimo_modell.py zeichnung 16 &quot;ABCDABCD/ABCDABCD/ABCDABCD/ABCDABCD&quot;
+python kumihimo_modell.py katalog 16
+</code></pre>
+<p>The Python model prints its output in German.</p>
+<h2>Download and contact</h2>
+<ul>
+<li>Current version as ZIP: “Download ZIP” at the top right of the planner (contains planner, guide, Python model and the sample patterns).</li>
+<li>Guide in the browser: <code>README.en.html</code>.</li>
+</ul>
+<p>© 2026 Daniel Ertl · <a href="https://daniel-ertl.de">daniel-ertl.de</a> · <a href="https://github.com/thunder312">GitHub: thunder312</a> · dertl@web.de</p>
+</main></body></html>
