@@ -13,7 +13,6 @@ Aus einem Muster berechnet er Startaufbau, Flechtschritte und Fadenbedarf; der F
 | `README.md` / `README.html` | Diese Anleitung (als Text bzw. für den Browser). |
 | `kumihimo-planer.zip` | Alles oben in einem Paket, immer die aktuelle Version. |
 
-Online: <https://kumihimo.daniel-ertl.de>.
 „Meine Muster“ speichert der Planer im jeweiligen Browser.
 Dauerhaft sind nur die Dateien im Ordner `Muster`.
 
