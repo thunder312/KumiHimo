@@ -103,5 +103,6 @@ python kumihimo_modell.py katalog 16
 
 - Aktuelle Version als ZIP: im Planer oben rechts „Download ZIP“ (enthält Planer, Anleitung, Python-Modell und die Beispielmuster).
 - Anleitung im Browser: `README.html`.
+- Freiwillige Unterstützung: Der Planer ist kostenlos. Wer mag, kann mir [einen Kaffee spendieren](https://buymeacoffee.com/dertl).
 
 © 2026 Daniel Ertl · [daniel-ertl.de](https://daniel-ertl.de) · [GitHub: thunder312](https://github.com/thunder312) · dertl@web.de

@@ -105,5 +105,6 @@ The Python model prints its output in German.
 
 - Current version as ZIP: “Download ZIP” at the top right of the planner (contains planner, guide, Python model and the sample patterns).
 - Guide in the browser: `README.en.html`.
+- Voluntary support: the planner is free. If you like, you can [buy me a coffee](https://buymeacoffee.com/dertl).
 
 © 2026 Daniel Ertl · [daniel-ertl.de](https://daniel-ertl.de) · [GitHub: thunder312](https://github.com/thunder312) · dertl@web.de

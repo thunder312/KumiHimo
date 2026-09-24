@@ -224,6 +224,9 @@ h2 .ctoggle,h3 .ctoggle,h4 .ctoggle{font-size:0}
 .headlinks .note{flex-basis:100%;text-align:right;font-size:12px}
 .copyright{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;justify-content:center;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
 .copyright a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
+.copyright .support{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:center;margin:0 0 6px}
+.copyright a.bmc{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--hi);color:var(--ink);background:color-mix(in srgb,var(--hi) 14%,var(--surface));text-decoration:none}
+.copyright a.bmc:hover{background:color-mix(in srgb,var(--hi) 26%,var(--surface))}
 .copyright a:hover{color:var(--accent);border-color:var(--accent)}
 .btn.tiny{padding:2px 8px;font-size:12px}
 @media (max-width:640px){.headlinks .note{text-align:left}}
@@ -664,6 +667,8 @@ h2 .ctoggle,h3 .ctoggle,h4 .ctoggle{font-size:0}
   </div>
 
   <footer class="copyright">
+    <p class="support"><span>Der Planer ist kostenlos. Wenn er dir hilft, freue ich mich über eine freiwillige Spende:</span>
+      <a class="btn bmc" href="https://buymeacoffee.com/dertl" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 8h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M17 9.5h1.5a2.5 2.5 0 0 1 0 5H17" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 3.5c0 1 1 1.3 1 2.3M12 3.5c0 1 1 1.3 1 2.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Einen Kaffee spendieren</span></a></p>
     <span>© <span id="cpYear">2026</span> Daniel Ertl</span>
     <a href="https://daniel-ertl.de" target="_blank" rel="noopener">daniel-ertl.de</a>
     <a href="https://github.com/thunder312" target="_blank" rel="noopener">GitHub: thunder312</a>
@@ -688,7 +693,7 @@ function colorName(n){
 }
 const colorWord=()=>LANG==="en"?"Colour ":"Farbe ";
 const I18N_EXACT={
-"Kumihimo-Planer":"Kumihimo Planner",
+"Kumihimo-Planer":"Kumihimo Planner","Der Planer ist kostenlos. Wenn er dir hilft, freue ich mich über eine freiwillige Spende:":"The planner is free. If it helps you, I’d be glad about a voluntary donation:","Einen Kaffee spendieren":"Buy me a coffee",
 "Muster planen für die runde 32er-Scheibe und die eckige Platte: Farben legen, Muster laden oder zeichnen, und Aufbau, Flechtschritte und Fadenbedarf rechnen sich sofort mit.":"Plan patterns for the round 32-slot disk and the square plate: set colours, load or draw a pattern, and the setup, braiding moves and thread requirements are worked out instantly.",
 "Anleitung":"Guide","Download ZIP":"Download ZIP",
 "Runde Scheibe":"Round disk","Eckige Scheibe":"Square plate","32 Schlitze · Kongo Gumi":"32 slots · Kongo Gumi","1–12 · A–H · Flachband, Vierkant":"1–12 · A–H · flat braid, square braid",
@@ -2228,7 +2233,7 @@ initCollapsibles();
 
 
 /* ---------- Kopf: Version, ZIP, Copyright ---------- */
-const BUILD="24.09.2026 14:54";
+const BUILD="24.09.2026 15:23";
 $("verInfo").textContent="Stand "+BUILD;
 $("cpYear").textContent=String(Math.max(2026,new Date().getFullYear()));
 const ZIPFILES=["kumihimo-planer.html","README.html","README.md","README.en.html","README.en.md","kumihimo_modell.py","Muster/4-farben-spirale.json","Muster/band-rot-orange-gelb-weiss.json"];
