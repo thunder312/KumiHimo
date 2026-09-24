@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kumihimo-Planer · Anleitung</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono&display=swap">
+<style>
+:root{--bg:#EDEFF2;--surface:#FAFBFC;--ink:#1C2030;--muted:#5C6376;--line:#D2D6DE;--accent:#2F4A8A;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#12141A;--surface:#1A1D26;--ink:#E4E7EE;--muted:#9BA1B3;--line:#2D3240;--accent:#93A6E8;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:32px 16px 64px}
+h1,h2{font-family:"Shippori Mincho",Georgia,serif;line-height:1.2} h1{font-size:34px} h2{margin-top:36px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+a{color:var(--accent)} code{font-family:"IBM Plex Mono",monospace;font-size:13px;background:var(--surface);padding:1px 4px;border-radius:4px}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto} pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%} th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.stand{color:var(--muted);font-size:13px}
+</style></head><body><main><p class="stand">Stand 24.09.2026 14:34</p>
+<h1>KumiHimo – Kumihimo-Planer</h1>
+<p>Planer für Kumihimo auf der runden Scheibe mit 32 Schlitzen (Kongo Gumi, 8 oder 16 Fäden) und der eckigen Platte (1–12 / A–H; Flachband und Vierkant mit je 8 Fäden).
+Aus einem Muster berechnet er Startaufbau, Flechtschritte und Fadenbedarf; der Flechtplan lässt sich als PDF exportieren.</p>
+<h2>Inhalt des Ordners</h2>
+<table>
+<thead>
+<tr>
+<th>Datei</th>
+<th>Zweck</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kumihimo-planer.html</code></td>
+<td>Das Programm. Per Doppelklick im Browser öffnen, es läuft auch offline.</td>
+</tr>
+<tr>
+<td><code>kumihimo_modell.py</code></td>
+<td>Dasselbe Rechenmodell in Python, zum Nachrechnen und Weiterentwickeln.</td>
+</tr>
+<tr>
+<td><code>Muster/</code></td>
+<td>Gespeicherte Muster als JSON-Dateien.</td>
+</tr>
+<tr>
+<td><code>README.md</code> / <code>README.html</code></td>
+<td>Diese Anleitung (als Text bzw. für den Browser).</td>
+</tr>
+<tr>
+<td><code>kumihimo-planer.zip</code></td>
+<td>Alles oben in einem Paket, immer die aktuelle Version.</td>
+</tr>
+</tbody>
+</table>
+<p>Online: <a href="https://kumihimo.daniel-ertl.de">https://kumihimo.daniel-ertl.de</a>.
+„Meine Muster“ speichert der Planer im jeweiligen Browser.
+Dauerhaft sind nur die Dateien im Ordner <code>Muster</code>.</p>
+<h2>Zu Hause im Browser betreiben</h2>
+<p>Der Planer ist eine einzige HTML-Datei und braucht keine Installation und keinen Server.</p>
+<ol>
+<li><strong>ZIP herunterladen und entpacken</strong>, zum Beispiel nach <code>Dokumente\KumiHimo</code>. Wichtig: wirklich entpacken, nicht aus dem ZIP heraus öffnen.</li>
+<li><strong><code>kumihimo-planer.html</code> doppelklicken.</strong> Sie öffnet sich im Standardbrowser (Chrome, Edge oder Firefox, jeweils aktuell).</li>
+<li><strong>Muster laden:</strong> unter „Export“ bzw. „Muster“ auf „Dateien öffnen“ und die Dateien aus dem Ordner <code>Muster</code> wählen (mehrere auf einmal gehen).</li>
+<li><strong>Muster sichern:</strong> „Als Datei speichern“ legt eine JSON-Datei im Download-Ordner ab; verschiebe sie in den Ordner <code>Muster</code>.</li>
+</ol>
+<p>Gut zu wissen:</p>
+<ul>
+<li><strong>Offline:</strong> Planer, Editor und Flechtanleitung laufen ohne Internet. Nur der PDF-Export lädt beim ersten Mal die PDF-Bibliothek jsPDF aus dem Internet; ohne Verbindung erscheinen außerdem Ersatzschriften.</li>
+<li><strong>„Meine Muster“ liegt im Browser</strong>, nicht im Ordner. Ein anderer Browser, ein anderer Speicherort der HTML-Datei oder das Löschen der Browserdaten zeigt eine leere Liste. Dauerhaft sind nur die Dateien im Ordner <code>Muster</code>.</li>
+<li><strong>Anleitung:</strong> <code>README.html</code> im selben Ordner; der Knopf „Anleitung“ im Planer öffnet sie.</li>
+<li><strong>Tablet oder Handy:</strong> Dort lassen sich lokale HTML-Dateien oft nicht bequem öffnen. Einfacher ist es, den Ordner auf einen Webserver zu legen, zum Beispiel über GitHub Pages im Repository <a href="https://github.com/thunder312/KumiHimo">thunder312/KumiHimo</a> (Einstellungen → Pages → Branch <code>main</code>). Dann öffnet man den Planer über eine normale Adresse.</li>
+<li><strong>Neue Version:</strong> Einfach die neue ZIP über den alten Ordner entpacken. Der Ordner <code>Muster</code> bleibt erhalten, solange du deine eigenen Dateien nicht überschreibst.</li>
+</ul>
+<h2>Bedienung</h2>
+<p>Oben wählst du die Scheibe (<strong>Runde Scheibe</strong> oder <strong>Eckige Scheibe</strong>), darunter die Arbeitsschritte:</p>
+<ol>
+<li><strong>Muster</strong>: Vorlagen, eigene Muster und (rund) der Musterkatalog. Ein Klick lädt das Muster und öffnet den Editor; alle weiteren Schritte werden mit aktualisiert.</li>
+<li><strong>Editor</strong>: Fadenzahl und Farben wählen und in die Matrix malen (rund) bzw. die Fäden auf der Platte färben (eckig). Rechts das flechtbare Ergebnis und „So passt es“. „Auf die Scheibe übernehmen“ springt zur Flechtanleitung.</li>
+<li><strong>Flechtanleitung</strong> (nur zum Ansehen, Farben kommen aus Muster und Editor): Zählrichtung, Scheibe Schritt für Schritt, Kordel und Musterbild, Aufbau und Flechtplan, Fadenbedarf.</li>
+<li><strong>Export</strong>: Muster speichern (Meine Muster, Datei, Code) und Flechtplan als PDF.</li>
+</ol>
+<p>Jeder große Bereich (z. B. Muster-Editor, Scheibe und Kordel, Fadenbedarf) lässt sich über den Pfeil rechts ein- und ausklappen; der Browser merkt sich das, ebenso den zuletzt offenen Arbeitsschritt.
+Für den PDF-Export wird einmal die PDF-Bibliothek jsPDF aus dem Internet geladen.</p>
+<h2>Tab „Eckige Scheibe“ (erste Ausbaustufe)</h2>
+<ul>
+<li>Platte mit Schlitzen 1–12 oben und unten, A–H links und rechts (von oben nach unten); die Platte wird nicht gedreht.</li>
+<li>Flechtart „Flachband, 8 Fäden“ mit den Zügen nach Fire Mountain Gems (Schritte 5–18): 14 Züge je Durchgang, 8 davon quer über die Platte, 6 zum Zurücksetzen.</li>
+<li>Flechtart „Vierkant, 8 Fäden“ nach Fire Mountain Gems (Square Braids): 12 Züge je Durchgang, 8 quer, 4 zum Zurücksetzen; das Bandbild zeigt alle vier Seiten.</li>
+<li>Muster-Editor: auf alle Bandseiten frei malen (Spalten = Zielschlitze der Seite, Zeilengruppen = Durchgänge); das Programm sucht den flechtbaren Aufbau (Mehrheit je Faden) und überträgt ihn mit „Auf die Platte übernehmen“.</li>
+<li>In der Flechtanleitung ist die Platte nur zum Ansehen; Aufbau-Vorlagen: Oben/unten, Abwechselnd, Außen/innen, Einfarbig.</li>
+<li>Zug für Zug durchklicken, Flechtplan für zwei Durchgänge, Fadenbedarf.</li>
+<li>Export: Muster speichern (Meine Muster, Datei, Code) und Flechtplan als A4-PDF (Plattenbild, Aufbau, Züge für zwei Durchgänge, Fadenbedarf). Gespeicherte Muster erscheinen unter „1 Muster“ → „Meine Muster“.</li>
+<li>„Dateien öffnen“ nimmt in beiden Tabs runde und eckige Muster an und sortiert sie richtig ein.</li>
+<li>Das Bandbild ist schematisch (Stich auf der Seite, zu der der Faden wandert) und noch nicht an einem echten Band geprüft.</li>
+</ul>
+<h2>Regeln des Kongo Gumi (Ergebnis des Modells)</h2>
+<ul>
+<li><strong>Flechtschritt:</strong> oben rechts nach unten rechts, unten links nach oben links, dann die Scheibe gegen den Uhrzeigersinn drehen, bis das nächste Paar oben liegt.</li>
+<li><strong>Stiche:</strong> Jeder Schritt legt zwei Stiche. Die Fäden wandern in einer festen Reihenfolge, der Musterkette.</li>
+<li><strong>Wiederholung:</strong> In der Matrix wiederholt sich jedes Muster alle 4 Zeilen.</li>
+<li><strong>Zwillingsstich:</strong> Zeile r+2 ist Zeile r, um eine halbe Runde versetzt. Jeder Faden liefert genau diese beiden Stiche.</li>
+<li><strong>Längs:</strong> Streifen in bis zu 4 Farben sind möglich, jede Farbe erscheint zweimal gegenüberliegend. Auf der Kordel werden sie zu Spiralen.</li>
+<li><strong>Quer:</strong> Ganze Ringe gibt es nur in 2 Farben im Wechsel.</li>
+<li><strong>Kontrolle:</strong> 16 Fäden in 2 Farben ergeben 1162 verschiedene Muster, wie im Artikel „Changing Spots“ (Bridges 2022).</li>
+</ul>
+<p>Die Stichform in den Vorschauen ist schematisch. Der Einarbeitungsfaktor für den Fadenbedarf (Standard 1,5) sollte mit einer Probe gemessen werden.</p>
+<h2>Dateiformat der Muster</h2>
+<pre><code class="language-json">{
+  &quot;kumihimo&quot;: 1,
+  &quot;name&quot;: &quot;Band rot-orange-gelb-weiß&quot;,
+  &quot;n&quot;: 16,
+  &quot;neck&quot;: &quot;0321032103210321&quot;,
+  &quot;pal&quot;: [&quot;#C0392B&quot;, &quot;#E67E22&quot;, &quot;#F1C40F&quot;, &quot;#F7F4EC&quot;],
+  &quot;names&quot;: [&quot;Rot&quot;, &quot;Orange&quot;, &quot;Gelb&quot;, &quot;Weiß&quot;],
+  &quot;matrix&quot;: [&quot;01230123&quot;, &quot;...&quot;]
+}
+</code></pre>
+<ul>
+<li><code>n</code>: Fadenzahl (8 oder 16).</li>
+<li><code>neck</code>: Farbnummer für jede Position der Musterkette (Index in <code>pal</code>).</li>
+<li><code>pal</code>, <code>names</code>: Farben als Hex-Code und ihre Namen.</li>
+<li><code>matrix</code> (optional): die Editor-Zeichnung, Zeilen von oben nach unten, <code>.</code> steht für eine leere Zelle.</li>
+</ul>
+<p>Muster der eckigen Platte haben <code>"typ": "eckig"</code>, dazu <code>struct</code> (<code>flach8</code> oder <code>vierkant8</code>), <code>col</code> (Farbnummer je Faden in Aufbau-Reihenfolge) und optional <code>editor</code> mit den Zeichnungen je Bandseite.</p>
+<h2>Python-Modell</h2>
+<pre><code>python kumihimo_modell.py muster Muster/band-rot-orange-gelb-weiss.json
+python kumihimo_modell.py zeichnung 16 &quot;ABCDABCD/ABCDABCD/ABCDABCD/ABCDABCD&quot;
+python kumihimo_modell.py katalog 16
+</code></pre>
+<h2>Download und Kontakt</h2>
+<ul>
+<li>Aktuelle Version als ZIP: im Planer oben rechts „Download ZIP“ (enthält Planer, Anleitung, Python-Modell und die Beispielmuster).</li>
+<li>Anleitung im Browser: <code>README.html</code>.</li>
+</ul>
+<p>© 2026 Daniel Ertl · <a href="https://daniel-ertl.de">daniel-ertl.de</a> · <a href="https://github.com/thunder312">GitHub: thunder312</a> · dertl@web.de</p>
+</main></body></html>

@@ -1,0 +1,20 @@
+# Kumihimo-Planer (statische Seite)
+DirectoryIndex index.html
+AddDefaultCharset UTF-8
+AddType text/markdown;charset=UTF-8 .md
+AddType text/plain;charset=UTF-8 .py
+AddType application/json;charset=UTF-8 .json
+AddType application/zip .zip
+Options -Indexes
+
+# HTML und Anleitung immer frisch laden, damit Updates sofort sichtbar sind
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|md)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+# Optional: immer auf https umleiten (erst aktivieren, wenn SSL für die Subdomain eingerichtet ist)
+# RewriteEngine On
+# RewriteCond %{HTTPS} !=on
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

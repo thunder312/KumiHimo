@@ -1,0 +1,2074 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kumihimo-Planer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EDEFF2; --surface:#FAFBFC; --sunk:#E3E6EB; --ink:#1C2030; --muted:#5C6376; --line:#D2D6DE;
+  --accent:#2F4A8A; --accent-ink:#FFFFFF; --hi:#C07F12; --disk:#E4E7EC; --disk-edge:#C3C8D2; --gap:#23252C;
+  --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",Georgia,serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12141A; --surface:#1A1D26; --sunk:#161922; --ink:#E4E7EE; --muted:#9BA1B3; --line:#2D3240;
+    --accent:#93A6E8; --accent-ink:#10131A; --hi:#E6AB3E; --disk:#232733; --disk-edge:#39404F; --gap:#0C0D11;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12141A; --surface:#1A1D26; --sunk:#161922; --ink:#E4E7EE; --muted:#9BA1B3; --line:#2D3240;
+  --accent:#93A6E8; --accent-ink:#10131A; --hi:#E6AB3E; --disk:#232733; --disk-edge:#39404F; --gap:#0C0D11;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:28px 64px;display:flex;flex-direction:column;gap:40px}
+h1,h2{font-family:var(--serif);font-weight:800;text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(30px,4.2vw,44px);line-height:1.1}
+h2{font-size:24px;line-height:1.2}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.09em;font-weight:600;color:var(--muted);margin:0}
+p{margin:0}
+.lede{color:var(--muted);max-width:62ch;margin-top:8px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.kana{font-family:var(--serif);font-size:15px;color:var(--muted);letter-spacing:.3em}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.tgroup{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--ink);font:500 14px var(--sans);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button+button{border-left:1px solid var(--line)}
+.swatches{display:flex;gap:6px;align-items:center}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+.sw:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
+.colorpick{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.colorpick input[type=color]{width:34px;height:28px;border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:2px;cursor:pointer}
+.brushname{font-weight:600;color:var(--ink)}
+
+/* stage */
+.stage{display:grid;grid-template-columns:minmax(300px,380px) 190px minmax(0,1fr);gap:16px;margin-top:16px}
+.panel{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.panel h3{display:flex;justify-content:space-between;gap:8px}
+.panel h3 small{font:400 12px var(--sans);text-transform:none;letter-spacing:0}
+#disk{width:100%;height:auto;display:block;touch-action:manipulation}
+.stepbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 14px var(--sans);padding:6px 12px;border-radius:8px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.stepcount{margin-left:auto;font-size:13px;color:var(--muted)}
+.steptext{font-size:14px;min-height:5.5em;padding:10px 12px;background:var(--sunk);border-radius:8px}
+.steptext b{font-weight:600}
+.chip{display:inline-block;flex:none;width:.85em;height:.85em;border-radius:50%;vertical-align:-.05em;box-shadow:0 0 0 1px rgba(0,0,0,.25);margin-right:3px}
+canvas{display:block;max-width:100%}
+#cord,#chart{width:100%;border-radius:6px;touch-action:none}
+#cord{cursor:grab}
+.cap{font-size:13px;color:var(--muted);min-height:2.6em}
+
+/* necklace */
+.neck{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:minmax(180px,260px) 1fr;gap:16px;align-items:center}
+.beads{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bead{width:34px;height:34px;border-radius:50%;border:0;cursor:default;box-shadow:inset 0 -4px 6px rgba(0,0,0,.25),0 0 0 1px rgba(0,0,0,.2);font:500 10px var(--mono);display:grid;place-items:center;padding:0}
+.bead.hov,.bead:hover{box-shadow:inset 0 -4px 6px rgba(0,0,0,.25),0 0 0 3px var(--hi)}
+.bead span{background:rgba(255,255,255,.82);color:#1C2030;border-radius:3px;padding:0 2px;line-height:1.3}
+.neck p{font-size:13px;color:var(--muted)}
+
+/* sections */
+section.block{display:flex;flex-direction:column;gap:14px}
+.two{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+tr.round td{border-top:2px solid var(--line)}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--sunk)}
+tbody tr.cur td{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.arrow{color:var(--muted);padding:0 3px}
+.note{font-size:13px;color:var(--muted)}
+.setup{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px 16px;font-size:14px}
+.setup div{display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px dashed var(--line)}
+.setup .num{min-width:56px;color:var(--muted)}
+.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fields label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.fields input{font:500 15px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+.facts{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px}
+.facts b{font-family:var(--mono);font-weight:500}
+
+/* catalog */
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.filters button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;font:500 13px var(--sans);cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.filters button small{opacity:.7;font-family:var(--mono);margin-left:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.tile{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px;cursor:pointer;display:flex;flex-direction:column;gap:3px;align-items:stretch}
+.tile:hover{border-color:var(--accent)}
+.tile canvas{width:100%;height:auto;border-radius:4px}
+.tile span{font:400 11px var(--mono);color:var(--muted);text-align:center}
+.explain{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.explain .card p{font-size:14px}
+.explain h4{margin:0;font-size:15px;font-weight:600}
+a{color:var(--accent)}
+
+@media (max-width:1060px){
+  .stage{grid-template-columns:minmax(0,1fr) 190px}
+  .chart-panel{grid-column:1 / -1}
+  .two{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .stage{grid-template-columns:1fr}
+  .cord-panel canvas{max-width:220px;margin:0 auto}
+  .neck{grid-template-columns:1fr}
+  .fields{grid-template-columns:1fr 1fr}
+  .bead{width:30px;height:30px}
+}
+
+/* nav, library, editor */
+.pdfbar{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.namefield.inline{flex:0 1 240px}
+[hidden]{display:none!important}
+.jump{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px}
+.jump a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px}
+.jump a:hover{color:var(--accent);border-color:var(--accent)}
+.sechead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px 24px}
+.sechead .note{max-width:70ch}
+.seg button .num{opacity:.75;font-size:12px}
+.lib{grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}
+.lib .tile{position:relative;text-align:left}
+.lib .tile b{font:600 13px var(--sans);color:var(--ink);padding:2px 4px 0}
+.lib .tile span{text-align:left;padding:0 4px 2px;font-family:var(--sans)}
+.lib .del{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:600 14px/1 var(--sans);cursor:pointer;display:grid;place-items:center;padding:0}
+.lib .del:hover{color:var(--ink);border-color:var(--hi)}
+.lib .del.armed{background:var(--hi);color:#1C2030;border-color:var(--hi);width:auto;border-radius:12px;padding:0 8px;font-size:12px}
+.empty{grid-column:1 / -1;padding:18px;border:1px dashed var(--line);border-radius:8px;color:var(--muted);font-size:14px}
+.savebar{gap:10px}
+.saverow{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.namefield{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);flex:1 1 260px}
+.namefield input,.pastebox textarea{font:400 15px var(--sans);padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+.pastebox textarea{font:400 12px var(--mono);resize:vertical}
+.pastebox{display:flex;gap:8px;align-items:flex-start}
+.filebtn{position:relative;overflow:hidden;display:inline-flex;align-items:center}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.filebtn:focus-within{outline:2px solid var(--hi);outline-offset:2px}
+.edstage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(220px,300px);gap:16px;margin-top:16px;align-items:start}
+#edPreview{width:100%;border-radius:6px}
+#edCanvas,#edResult{width:100%;border-radius:6px;touch-action:none}
+#edCanvas{cursor:crosshair}
+.edside{gap:12px}
+.meter{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}
+.meterbar{height:100%;background:var(--accent);width:0;transition:width .25s}
+.edbig{font-family:var(--serif);font-size:30px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.setup.small{grid-template-columns:1fr;font-size:13px;gap:2px}
+.setup.small div{padding:2px 0}
+@media (max-width:1060px){.edstage{grid-template-columns:1fr 1fr}.edside{grid-column:1 / -1}}
+@media (max-width:640px){.edstage{grid-template-columns:1fr}.pastebox{flex-direction:column}}
+
+/* tabs & eckige Platte */
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin-bottom:-16px}
+.tabs button{border:1px solid transparent;border-bottom:0;min-width:0;background:transparent;color:var(--muted);font:600 16px var(--sans);padding:10px 18px 9px;border-radius:10px 10px 0 0;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:1px;margin-bottom:-1px;white-space:nowrap}
+.tabs button small{font:400 12px var(--sans);color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface);border-color:var(--line);color:var(--ink);box-shadow:inset 0 3px 0 var(--accent)}
+.tabs button:hover{color:var(--ink)}
+.tabpanel{display:flex;flex-direction:column;gap:40px}
+.presetrow{display:flex;flex-wrap:wrap;gap:6px}
+.presetrow .btn{padding:5px 10px;font-size:13px}
+.qstage{display:grid;grid-template-columns:minmax(300px,440px) minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+#qPlate{width:100%;height:auto;display:block}
+.faces{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.faces>div{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.faces canvas{max-width:100%;border-radius:6px}
+.facecap{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+@media (max-width:760px){.qstage{grid-template-columns:1fr}}
+
+/* Unter-Tabs, einklappbar */
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;padding:10px 0 2px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg)}
+.subtabs button{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 14px var(--sans);padding:7px 14px;border-radius:999px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.subtabs button .num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--sunk);font-size:12px;color:var(--muted)}
+.subtabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.subtabs button[aria-selected="true"] .num{background:color-mix(in srgb,var(--accent-ink) 25%,transparent);color:var(--accent-ink)}
+.subpanel{display:flex;flex-direction:column;gap:40px}
+.chead{display:flex;align-items:center;gap:8px}
+h2.chead,h3.chead,h4.chead{justify-content:space-between}
+.sechead.chead{display:flex}
+.ctoggle{margin-left:auto;flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;display:inline-grid;place-items:center;padding:0;vertical-align:middle}
+.ctoggle::before{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .15s}
+.is-collapsed>.chead .ctoggle::before{transform:translateY(1px) rotate(-135deg)}
+.ctoggle:hover{color:var(--ink);border-color:var(--accent)}
+.is-collapsed>:not(.chead){display:none!important}
+.is-collapsed>.chead>:not(h2):not(h3):not(.ctoggle){display:none}
+.sechead>.ctoggle{align-self:center}
+.panel.is-collapsed,.card.is-collapsed{gap:0}
+h2 .ctoggle,h3 .ctoggle,h4 .ctoggle{font-size:0}
+.qtile{padding:10px}
+.chiprows{display:flex;flex-direction:column;gap:6px}
+.chiprows div{display:flex;align-items:center;gap:4px}
+.chiprows small{width:44px;font-size:11px;color:var(--muted)}
+.chiprows i{width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.2)}
+.qtile b{font:600 13px var(--sans);padding-top:4px}
+
+/* Kopf-Links, Copyright */
+.headlinks{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.headlinks .btn{text-decoration:none;display:inline-flex;align-items:center}
+.headlinks .note{flex-basis:100%;text-align:right;font-size:12px}
+.copyright{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;justify-content:center;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.copyright a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
+.copyright a:hover{color:var(--accent);border-color:var(--accent)}
+.btn.tiny{padding:2px 8px;font-size:12px}
+@media (max-width:640px){.headlinks .note{text-align:left}}
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="kana">組紐</div>
+      <h1>Kumihimo-Planer</h1>
+      <p class="lede">Muster planen für die runde 32er-Scheibe und die eckige Platte: Farben legen, Muster laden oder zeichnen, und Aufbau, Flechtschritte und Fadenbedarf rechnen sich sofort mit.</p>
+    </div>
+    <div class="headlinks">
+      <a class="btn" href="README.html" target="_blank" rel="noopener" id="lnkReadme">Anleitung</a>
+      <a class="btn primary" href="kumihimo-planer.zip" download id="lnkZip">Download ZIP</a>
+      <span class="note num" id="verInfo"></span>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Scheibe">
+    <button type="button" role="tab" id="tabBtnRund" data-tab="rund" aria-selected="true" aria-controls="tab-rund">Runde Scheibe <small>32 Schlitze · Kongo Gumi</small></button>
+    <button type="button" role="tab" id="tabBtnEckig" data-tab="eckig" aria-selected="false" aria-controls="tab-eckig">Eckige Scheibe <small>1–12 · A–H · Flachband, Vierkant</small></button>
+  </div>
+
+  <div class="tabpanel" id="tab-rund" role="tabpanel" aria-labelledby="tabBtnRund">
+  <div class="subtabs" role="tablist" data-tab="rund" aria-label="Arbeitsschritte"><button type="button" role="tab" data-sub="muster" aria-selected="true"><span class="num">1</span> Muster</button><button type="button" role="tab" data-sub="editor" aria-selected="false"><span class="num">2</span> Editor</button><button type="button" role="tab" data-sub="anleitung" aria-selected="false"><span class="num">3</span> Flechtanleitung</button><button type="button" role="tab" data-sub="export" aria-selected="false"><span class="num">4</span> Export</button></div>
+  <div class="subpanel" data-sub="muster">
+<section class="block" id="laden">
+    <div class="sechead">
+      <h2>Vorlagen und eigene Muster</h2>
+      <div class="seg" id="libTabs" role="tablist">
+        <button type="button" data-tab="vorlagen" aria-pressed="true">Vorlagen</button>
+        <button type="button" data-tab="eigene" aria-pressed="false">Meine Muster <span class="num" id="ownCount"></span></button>
+      </div>
+    </div>
+    <p class="note" id="libNote"></p>
+    <div class="grid lib" id="libGrid"></div>
+  </section>
+
+<section class="block" id="katalog">
+    <h2>Musterkatalog, zwei Farben</h2>
+    <p class="note" id="catNote"></p>
+    <div class="filters" id="filters"></div>
+    <div class="grid" id="catGrid"></div>
+  </section>
+  </div>
+  <div class="subpanel" data-sub="editor" hidden>
+<section class="block" id="editor">
+    <div class="sechead">
+      <h2>Muster-Editor</h2>
+      <p class="note">Zeichne frei in die Matrix. Das Programm sucht den flechtbaren Aufbau, der deiner Zeichnung am nächsten kommt, und rechnet daraus die Schritte auf der Scheibe.</p>
+    </div>
+    <div class="toolbar">
+      <div class="tgroup"><h3>Fäden</h3>
+        <div class="seg" id="edN"><button type="button" data-n="8" aria-pressed="false">8</button><button type="button" data-n="16" aria-pressed="true">16</button></div>
+      </div>
+      <div class="tgroup"><h3>Farbe</h3>
+        <div class="swatches" id="edSwatches"></div>
+        <label class="colorpick" for="edColorIn"><input type="color" id="edColorIn" value="#2F3E77"><span class="brushname" id="edBrushName"></span> anpassen</label>
+      </div>
+      <div class="tgroup"><h3>Werkzeug</h3>
+        <div class="seg" id="edTool">
+          <button type="button" data-tool="pen" aria-pressed="true">Stift</button>
+          <button type="button" data-tool="erase" aria-pressed="false">Radierer</button>
+          <button type="button" data-tool="fill" aria-pressed="false">Füllen</button>
+        </div>
+      </div>
+      <div class="tgroup"><h3>Modus</h3>
+        <div class="seg" id="edMode">
+          <button type="button" data-mode="free" aria-pressed="true">Frei</button>
+          <button type="button" data-mode="braid" aria-pressed="false">Nur Flechtbares</button>
+        </div>
+      </div>
+      <div class="tgroup"><h3>Reihen</h3>
+        <div class="seg" id="edRows">
+          <button type="button" data-r="8" aria-pressed="false">8</button>
+          <button type="button" data-r="12" aria-pressed="true">12</button>
+          <button type="button" data-r="16" aria-pressed="false">16</button>
+          <button type="button" data-r="24" aria-pressed="false">24</button>
+        </div>
+      </div>
+      <div class="tgroup">
+        <button class="btn" type="button" id="edFromPlan">Vom Planer holen</button>
+        <button class="btn" type="button" id="edClear">Leeren</button>
+      </div>
+    </div>
+    <div class="edstage">
+      <figure class="panel">
+        <h3>Deine Zeichnung <small class="num" id="edInfo"></small></h3>
+        <canvas id="edCanvas" aria-label="Zeichenmatrix"></canvas>
+        <figcaption class="cap">Farbe in der Leiste über der Matrix wählen. Ziehen malt, Radierer macht Zellen egal (schraffiert). Links und rechts gehören zusammen: die Matrix ist die abgewickelte Kordel, eine Zeile ist eine halbe Runde Flechtschritte.</figcaption>
+      </figure>
+      <figure class="panel">
+        <h3>Flechtbares Ergebnis <small class="num" id="edScore"></small></h3>
+        <canvas id="edResult" aria-label="Flechtbares Ergebnis"></canvas>
+        <figcaption class="cap" id="edHint"></figcaption>
+      </figure>
+      <div class="panel edside">
+        <h3>So passt es</h3>
+        <div class="meter"><div class="meterbar" id="edMeter"></div></div>
+        <p class="edbig" id="edPct"></p>
+        <p class="note" id="edExplain"></p>
+        <canvas id="edPreview" aria-label="Ergebnis auf der Kordel, abgerollt"></canvas>
+        <p class="note">So sieht das Ergebnis auf der Kordel aus. Die Spalten der Matrix laufen schräg um die Kordel, deshalb werden senkrechte Streifen zu Spiralen.</p>
+        <div class="setup small" id="edSetup"></div>
+        <button class="btn primary" type="button" id="edApply">Auf die Scheibe übernehmen</button>
+        <p class="note">Danach siehst du das Muster darunter auf der Scheibe; Startaufbau, Flechtschritte und Fadenbedarf folgen weiter unten. Speichern kannst du unter „Muster laden“ → „Meine Muster“.</p>
+      </div>
+    </div>
+  </section>
+
+<section class="block" id="modell">
+    <h2>So rechnet der Planer</h2>
+    <div class="explain">
+      <div class="card"><h4>Zwei Stiche pro Schritt</h4><p>Bei jedem Schritt wandern zwei Fäden quer über die Scheibe: oben rechts nach unten rechts, unten links nach oben links. Diese beiden legen sich außen auf die Kordel und bilden je einen Stich. Die Paare rutschen dabei pro Runde zwei Schlitze weiter; das ist normal und im Flechtplan schon eingerechnet.</p></div>
+      <div class="card"><h4>Die Musterkette</h4><p>Welcher Faden als nächster wandert, folgt einer festen Reihenfolge, die alle Fäden genau einmal enthält. Das Muster hängt nur von der Farbfolge in dieser Kette ab. Verdrehte oder gespiegelte Ketten ergeben dieselbe Kordel, nur verschoben.</p></div>
+      <div class="card"><h4>Vom Muster zum Aufbau</h4><p>Ein Wunschmuster ist nur flechtbar, wenn alle Stiche eines Fadens dieselbe Farbe haben. Deshalb färbt ein Klick ins Musterbild immer den ganzen Faden, und Aufbau und Flechtplan ergeben sich daraus direkt.</p></div>
+      <div class="card"><h4>Gegenprobe und Grenzen</h4><p>Für 16 Fäden in zwei Farben zählt der Katalog 1162 verschiedene Muster, genau die Zahl aus <a href="https://archive.bridgesmathart.org/2022/bridges2022-327.pdf" target="_blank" rel="noopener">„Changing Spots“ (Bridges 2022)</a>. Neigung und Form der Stiche sind schematisch gezeichnet.</p></div>
+    </div>
+  </section>
+  </div>
+  <div class="subpanel" data-sub="anleitung" hidden>
+<section class="block" id="studio" aria-label="Scheibe und Kordel">
+    <h2>Scheibe und Kordel</h2>
+    <div class="toolbar">
+      <div class="tgroup"><h3>Zählung</h3>
+        <div class="seg" id="segDir"><button type="button" data-cw="1" aria-pressed="true">im Uhrzeigersinn</button><button type="button" data-cw="0" aria-pressed="false">gegen</button></div>
+      </div>
+      <p class="note">Nur zum Ansehen: Fadenzahl und Farben kommen aus „Muster“ und dem Muster-Editor.</p>
+    </div>
+
+    <div class="stage">
+      <figure class="panel disk-panel">
+        <h3>Scheibe <small class="num" id="diskInfo"></small></h3>
+        <svg id="disk" viewBox="-172 -178 344 352" role="img" aria-label="Kumihimo-Scheibe mit 32 Schlitzen"></svg>
+        <div class="stepbar">
+          <button class="btn" type="button" id="bReset" title="Zurück zum Aufbau">Aufbau</button>
+          <button class="btn" type="button" id="bPrev">Zurück</button>
+          <button class="btn primary" type="button" id="bNext">Nächster Schritt</button>
+          <span class="stepcount num" id="stepCount"></span>
+        </div>
+        <p class="steptext" id="stepText"></p>
+      </figure>
+
+      <figure class="panel cord-panel">
+        <h3>Kordel</h3>
+        <canvas id="cord" aria-label="Vorschau der Kordel"></canvas>
+        <div class="stepbar"><button class="btn" type="button" id="bSpin">Anhalten</button></div>
+        <figcaption class="cap">Ziehen dreht die Kordel.</figcaption>
+      </figure>
+
+      <figure class="panel chart-panel">
+        <h3>Musterbild, abgerollt</h3>
+        <canvas id="chart" aria-label="Abgerolltes Musterbild der Kordel"></canvas>
+        <figcaption class="cap" id="hoverInfo">Zeig auf einen Stich, um zu sehen, von welchem Faden er stammt.</figcaption>
+      </figure>
+    </div>
+
+    <div class="neck">
+      <div>
+        <h3>Musterkette</h3>
+        <p>Die Reihenfolge, in der die Fäden auf der Kordel auftauchen. Die Kordel ist diese Kette, schraubenförmig aufgewickelt. Die Zahl nennt den Startschlitz.</p>
+      </div>
+      <div class="beads" id="beads"></div>
+    </div>
+  </section>
+
+<section class="block" id="plan">
+    <h2>Aufbau und Flechtplan</h2>
+    <div class="two">
+      <div class="card">
+        <h3>Flechtschritte · erste zwei Runden</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Schritt</th><th>Oben</th><th>Oben rechts nach unten</th><th>Unten links nach oben</th></tr></thead>
+          <tbody id="planBody"></tbody>
+        </table></div>
+        <p class="note" id="planNote"></p>
+      </div>
+      <div class="card">
+        <h3>Startaufbau</h3>
+        <div class="setup" id="setupList"></div>
+        <div class="facts" id="facts"></div>
+      </div>
+    </div>
+  </section>
+
+<section class="block" id="material">
+    <h2>Fadenbedarf</h2>
+    <div class="two">
+      <div class="card">
+        <h3>Länge und Zugabe</h3>
+        <div class="fields">
+          <label for="inLen">Fertige Länge (cm)<input id="inLen" type="number" min="1" step="1" value="50"></label>
+          <label for="inFac">Einarbeitung (Faktor)<input id="inFac" type="number" min="1" step="0.05" value="1.5"></label>
+          <label for="inAdd">Zugabe je Strang (cm)<input id="inAdd" type="number" min="0" step="1" value="20"></label>
+        </div>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Farbe</th><th>Stränge</th><th>Länge je Strang</th><th>Gesamt</th><th>Gefaltet möglich</th></tr></thead>
+          <tbody id="matBody"></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <h3>Hinweise</h3>
+        <p class="note">Der Einarbeitungsfaktor hängt von Garn, Gewicht und Zug ab. 1,5 ist ein Startwert. Am genauesten wird es, wenn du 10 cm zur Probe flechtest und misst, wie viel Faden dabei verbraucht wurde.</p>
+        <p class="note">„Gefaltet möglich“: Zwei gleichfarbige Stränge in gegenüberliegenden Schlitzen kannst du aus einem doppelt so langen Faden legen, den du in der Mitte über das Loch faltest. Das spart den Startknoten.</p>
+      </div>
+    </div>
+  </section>
+  </div>
+  <div class="subpanel" data-sub="export" hidden>
+  <section class="block" id="export">
+    <h2>Export</h2>
+    <div class="two">
+    <div class="card savebar">
+      <h3>Muster speichern</h3>
+      <div class="saverow">
+        <label class="namefield" for="saveName">Name für das aktuelle Muster<input id="saveName" type="text" maxlength="60" placeholder="z. B. Armband Indigo-Zickzack"></label>
+        <button class="btn primary" type="button" id="bSave">Speichern</button>
+      </div>
+      <div class="saverow">
+        <button class="btn" type="button" id="bExport" hidden>Als Datei speichern</button>
+        <button class="btn" type="button" id="bCopy">Code kopieren</button>
+        <label class="btn filebtn" for="fileIn">Dateien öffnen<input id="fileIn" type="file" multiple accept=".json,application/json,text/plain"></label>
+        <button class="btn" type="button" id="bPasteToggle">Code einfügen</button>
+      </div>
+      <div class="pastebox" id="pasteBox" hidden>
+        <textarea id="pasteIn" rows="3" placeholder="Code hier einfügen (beginnt mit {&quot;kumihimo&quot;…)"></textarea>
+        <button class="btn primary" type="button" id="bPasteLoad">Laden</button>
+      </div>
+      <p class="note" id="saveMsg" role="status"></p>
+    </div>
+      <div class="card">
+        <h3>Flechtplan als PDF</h3>
+        <p class="note">A4-PDF mit Kopf (Mustername, Druckdatum), Aufbau mit Scheibenbild und Musterbild, Flechtplan für zwei Runden und Fadenbedarf.</p>
+        <div class="pdfbar">
+          <label class="namefield inline" for="pdfName">Mustername<input id="pdfName" type="text" maxlength="60" placeholder="Kumihimo-Muster"></label>
+          <button class="btn primary" type="button" id="bPdf">Als PDF exportieren</button>
+        </div>
+        <p class="note" id="pdfMsg" role="status"></p>
+      </div>
+    </div>
+  </section>
+  </div>
+  </div>
+
+  <div class="tabpanel" id="tab-eckig" role="tabpanel" aria-labelledby="tabBtnEckig" hidden>
+  <div class="subtabs" role="tablist" data-tab="eckig" aria-label="Arbeitsschritte"><button type="button" role="tab" data-sub="muster" aria-selected="true"><span class="num">1</span> Muster</button><button type="button" role="tab" data-sub="editor" aria-selected="false"><span class="num">2</span> Editor</button><button type="button" role="tab" data-sub="anleitung" aria-selected="false"><span class="num">3</span> Flechtanleitung</button><button type="button" role="tab" data-sub="export" aria-selected="false"><span class="num">4</span> Export</button></div>
+  <div class="subpanel" data-sub="muster">
+    <section class="block" id="qMuster">
+      <h2>Flechtart und Aufbau</h2>
+      <div class="two">
+        <div class="card">
+          <h3>Flechtart</h3>
+          <div class="seg" id="qStruct"></div>
+          <p class="note" id="qStructNote"></p>
+        </div>
+        <div class="card">
+          <h3>Aufbau-Vorlagen</h3>
+          <div class="grid lib" id="qPresets"></div>
+          <p class="note">Klick lädt die Vorlage in den Editor. Die Farben kommen aus den ersten beiden Farben der Palette.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="qOwn">
+      <h2>Meine Muster</h2>
+      <p class="note" id="qOwnNote"></p>
+      <div class="grid lib" id="qOwnGrid"></div>
+    </section>
+  </div>
+  <div class="subpanel" data-sub="editor" hidden>
+    <section class="block" id="qEditor">
+      <div class="sechead">
+        <h2>Muster-Editor</h2>
+        <p class="note">Zeichne frei auf die Bandseiten. Das Programm sucht den flechtbaren Aufbau, der deiner Zeichnung am nächsten kommt, und rechnet daraus die Züge auf der Platte.</p>
+      </div>
+      <div class="toolbar">
+        <div class="tgroup"><h3>Farbe</h3>
+          <div class="swatches" id="qSwatches"></div>
+          <label class="colorpick" for="qColorIn"><input type="color" id="qColorIn" value="#2F3E77"><span class="brushname" id="qBrushName"></span> anpassen</label>
+        </div>
+        <div class="tgroup"><h3>Werkzeug</h3>
+          <div class="seg" id="qeTool">
+            <button type="button" data-tool="pen" aria-pressed="true">Stift</button>
+            <button type="button" data-tool="erase" aria-pressed="false">Radierer</button>
+            <button type="button" data-tool="fill" aria-pressed="false">Füllen</button>
+          </div>
+        </div>
+        <div class="tgroup"><h3>Modus</h3>
+          <div class="seg" id="qeMode">
+            <button type="button" data-mode="free" aria-pressed="true">Frei</button>
+            <button type="button" data-mode="braid" aria-pressed="false">Nur Flechtbares</button>
+          </div>
+        </div>
+        <div class="tgroup"><h3>Durchgänge</h3>
+          <div class="seg" id="qeRows">
+            <button type="button" data-r="4" aria-pressed="false">4</button>
+            <button type="button" data-r="6" aria-pressed="true">6</button>
+            <button type="button" data-r="8" aria-pressed="false">8</button>
+            <button type="button" data-r="12" aria-pressed="false">12</button>
+          </div>
+        </div>
+        <div class="tgroup">
+          <button class="btn" type="button" id="qeFromPlan">Vom Planer holen</button>
+          <button class="btn" type="button" id="qeClear">Leeren</button>
+        </div>
+      </div>
+      <div class="edstage">
+        <figure class="panel">
+          <h3>Deine Zeichnung <small class="num" id="qeInfo"></small></h3>
+          <canvas id="qeCanvas" aria-label="Zeichenmatrix der Bandseiten"></canvas>
+          <figcaption class="cap">Jede Spalte ist ein Schlitz, in den die Fäden auf dieser Seite wandern; eine Zeilengruppe ist ein Durchgang, oben der neueste. Radierer macht Zellen egal (schraffiert).</figcaption>
+        </figure>
+        <figure class="panel">
+          <h3>Flechtbares Ergebnis <small class="num" id="qeScore"></small></h3>
+          <canvas id="qeResult" aria-label="Flechtbares Ergebnis"></canvas>
+          <figcaption class="cap">Zeig auf eine Zelle: alle Stiche desselben Fadens leuchten auf.</figcaption>
+        </figure>
+        <div class="panel edside">
+          <h3>So passt es</h3>
+          <div class="meter"><div class="meterbar" id="qeMeter"></div></div>
+          <p class="edbig" id="qePct"></p>
+          <p class="note" id="qeExplain"></p>
+          <div class="setup small" id="qeSetup"></div>
+          <button class="btn primary" type="button" id="qeApply">Auf die Platte übernehmen</button>
+          <p class="note">Danach zeigt die Flechtanleitung Platte, Band, Züge und Fadenbedarf für diesen Aufbau.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="subpanel" data-sub="anleitung" hidden>
+    <section class="block" id="qStudio">
+      <div class="sechead">
+        <h2>Eckige Platte</h2>
+        <p class="note">Oben und unten die Schlitze 1 bis 12, links und rechts A bis H von oben nach unten. Die Platte wird beim Flechten nicht gedreht. Die Farben kommen aus „Muster“ und dem Muster-Editor.</p>
+      </div>
+      <div class="qstage">
+        <figure class="panel">
+          <h3>Platte <small class="num" id="qInfo"></small></h3>
+          <svg id="qPlate" viewBox="-160 -160 320 320" role="img" aria-label="Eckige Kumihimo-Platte"></svg>
+          <div class="stepbar">
+            <button class="btn" type="button" id="qReset">Aufbau</button>
+            <button class="btn" type="button" id="qPrev">Zurück</button>
+            <button class="btn primary" type="button" id="qNext">Nächster Zug</button>
+            <span class="stepcount num" id="qStepCount"></span>
+          </div>
+          <p class="steptext" id="qStepText"></p>
+        </figure>
+        <figure class="panel">
+          <h3>Band / Kordel <small>schematisch</small></h3>
+          <div class="faces" id="qFaces"></div>
+          <figcaption class="cap" id="qFaceInfo"></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="block" id="qPlan">
+      <h2>Aufbau und Flechtplan</h2>
+      <div class="two">
+        <div class="card">
+          <h3>Züge · erste zwei Durchgänge</h3>
+          <div class="tablewrap"><table>
+            <thead><tr><th>Zug</th><th>Faden</th><th>von</th><th>nach</th><th></th></tr></thead>
+            <tbody id="qPlanBody"></tbody>
+          </table></div>
+          <p class="note" id="qPlanNote"></p>
+        </div>
+        <div class="card">
+          <h3>Startaufbau</h3>
+          <div class="setup small" id="qSetup"></div>
+          <div class="facts" id="qFacts"></div>
+          <p class="note" id="qSource"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="qMaterial">
+      <h2>Fadenbedarf</h2>
+      <div class="two">
+        <div class="card">
+          <h3>Länge und Zugabe</h3>
+          <div class="fields">
+            <label for="qLen">Fertige Länge (cm)<input id="qLen" type="number" min="1" step="1" value="20"></label>
+            <label for="qFac">Einarbeitung (Faktor)<input id="qFac" type="number" min="1" step="0.05" value="1.5"></label>
+            <label for="qAdd">Zugabe je Strang (cm)<input id="qAdd" type="number" min="0" step="1" value="20"></label>
+          </div>
+          <div class="tablewrap"><table>
+            <thead><tr><th>Farbe</th><th>Stränge</th><th>Länge je Strang</th><th>Gesamt</th></tr></thead>
+            <tbody id="qMatBody"></tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <h3>Hinweise</h3>
+          <p class="note">Bei der Anleitung von Fire Mountain Gems werden die Fäden in der Mitte gefaltet und die Falte durch das Loch gesteckt. Zwei Stränge kommen dann aus einem doppelt so langen Faden.</p>
+          <p class="note">Das Bandbild ist schematisch: Jeder Zug quer über die Platte legt einen Stich auf die Bandseite, zu der der Faden hinwandert. An einem echten Band ist das noch nicht geprüft.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="subpanel" data-sub="export" hidden>
+    <section class="block" id="qExport">
+      <h2>Export</h2>
+      <div class="two">
+        <div class="card savebar">
+          <h3>Muster speichern</h3>
+          <div class="saverow">
+            <label class="namefield" for="qSaveName">Name für das aktuelle Muster<input id="qSaveName" type="text" maxlength="60" placeholder="z. B. Flachband Indigo-Streifen"></label>
+            <button class="btn primary" type="button" id="qbSave">Speichern</button>
+          </div>
+          <div class="saverow">
+            <button class="btn" type="button" id="qbExport" hidden>Als Datei speichern</button>
+            <button class="btn" type="button" id="qbCopy">Code kopieren</button>
+            <label class="btn filebtn" for="qFileIn">Dateien öffnen<input id="qFileIn" type="file" multiple accept=".json,application/json,text/plain"></label>
+            <button class="btn" type="button" id="qbPasteToggle">Code einfügen</button>
+          </div>
+          <div class="pastebox" id="qPasteBox" hidden>
+            <textarea id="qPasteIn" rows="3" placeholder="Code hier einfügen (beginnt mit {&quot;kumihimo&quot;…)"></textarea>
+            <button class="btn primary" type="button" id="qbPasteLoad">Laden</button>
+          </div>
+          <p class="note" id="qSaveMsg" role="status"></p>
+        </div>
+        <div class="card">
+          <h3>Flechtplan als PDF</h3>
+          <p class="note">A4-PDF mit Kopf (Mustername, Druckdatum), Aufbau mit Plattenbild, Flechtplan für zwei Durchgänge und Fadenbedarf.</p>
+          <div class="pdfbar">
+            <label class="namefield inline" for="qPdfName">Mustername<input id="qPdfName" type="text" maxlength="60" placeholder="Kumihimo-Muster"></label>
+            <button class="btn primary" type="button" id="qbPdf">Als PDF exportieren</button>
+          </div>
+          <p class="note" id="qPdfMsg" role="status"></p>
+        </div>
+      </div>
+    </section>
+  </div>
+  </div>
+
+  <footer class="copyright">
+    <span>© <span id="cpYear">2026</span> Daniel Ertl</span>
+    <a href="https://daniel-ertl.de" target="_blank" rel="noopener">daniel-ertl.de</a>
+    <a href="https://github.com/thunder312" target="_blank" rel="noopener">GitHub: thunder312</a>
+    <span class="mail"><span id="cpMail">dertl@web.de</span> <button class="btn tiny" type="button" id="cpCopy">kopieren</button></span>
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+const SL=32, DEG=360/SL, SVGNS="http://www.w3.org/2000/svg";
+const RM=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const DEFAULT_PAL=[["#2F3E77","Indigo"],["#EDE6D6","Elfenbein"],["#B8432F","Zinnober"],["#7E9B84","Salbei"],["#D2A23A","Senf"],["#26272D","Tinte"]];
+const S={n:16,pal:DEFAULT_PAL.map(p=>p[0]),names:DEFAULT_PAL.map(p=>p[1]),brush:0,col:[],cw:true,step:0,spin:!RM,hover:-1,catSpots:2};
+const mod=(a,m)=>((a%m)+m)%m;
+let SIM=null, NECK=[], KSIM=240;
+
+/* ---------- Simulation ---------- */
+function simulate(n,K){
+  const G=n/2, sp=SL/G, at=new Array(SL).fill(-1), groups=[], init=[];
+  for(let g=0;g<G;g++){const ccw=mod(g*sp-1,SL), cw=g*sp; groups.push({ccw,cw}); at[ccw]=2*g; at[cw]=2*g+1; init[2*g]=ccw; init[2*g+1]=cw;}
+  const snaps=[at.slice()], moves=[], stitches=[], topAng=[];
+  for(let k=0;k<K;k++){
+    const t=k%G, b=(t+G/2)%G, p=groups[t].ccw, p1=groups[t].cw, q=groups[b].ccw, q1=groups[b].cw;
+    const down=at[p1], up=at[q1], dTo=mod(q-1,SL), uTo=mod(p-1,SL);
+    topAng.push(p1*DEG);
+    moves.push({k,top:[p,p1],bot:[q,q1],down:{s:down,from:p1,to:dTo},up:{s:up,from:q1,to:uTo}});
+    at[p1]=-1; at[q1]=-1; at[dTo]=down; at[uTo]=up;
+    groups[t]={ccw:uTo,cw:p}; groups[b]={ccw:dTo,cw:q};
+    stitches.push({k,slot:uTo,s:up},{k,slot:dTo,s:down});
+    snaps.push(at.slice());
+  }
+  // unwrap rotation angles (always turning the same way)
+  const rot=[topAng[0]];
+  for(let k=1;k<K;k++){const prev=rot[k-1]; rot.push(prev+mod(topAng[k]-prev,360));}
+  return {n,G,init,snaps,moves,stitches,rot};
+}
+function rebuild(){SIM=simulate(S.n,KSIM); NECK=SIM.moves.slice(0,S.n).map(m=>m.up.s);}
+function defaultColors(n){
+  const pat=n===16?[0,0,1,1,0,0,2,2]:[0,0,1,2];
+  const c=new Array(n); NECK.forEach((s,j)=>c[s]=pat[j%pat.length]); return c;
+}
+const label=i=>S.cw?i+1:SL-i;
+const colOf=s=>S.pal[S.col[s]];
+const nameOf=s=>S.names[S.col[s]];
+const chip=hex=>`<span class="chip" style="background:${hex}"></span>`;
+
+/* ---------- color helpers ---------- */
+function rgb(h){h=h.replace("#","");return [0,2,4].map(i=>parseInt(h.substr(i,2),16));}
+function mix(h,t,a){const c=rgb(h),d=typeof t==="string"?rgb(t):t;return `rgb(${c.map((v,i)=>Math.round(v+(d[i]-v)*a)).join(",")})`;}
+function lum(h){const [r,g,b]=rgb(h);return (0.299*r+0.587*g+0.114*b)/255;}
+
+/* ---------- persistence ---------- */
+function save(){try{localStorage.setItem("kumihimo-planer",JSON.stringify({n:S.n,pal:S.pal,names:S.names,col:S.col,cw:S.cw}));}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem("kumihimo-planer")||"null"); if(d&&(d.n===8||d.n===16)&&Array.isArray(d.col)&&d.col.length===d.n){S.n=d.n;S.pal=d.pal;S.names=d.names;S.col=d.col;S.cw=!!d.cw;return true;}}catch(e){} return false;}
+
+/* ---------- toolbar ---------- */
+const $=id=>document.getElementById(id);
+function renderSwatches(){
+  for(const [box,inp,nm] of [["edSwatches","edColorIn","edBrushName"]]){
+    const el=$(box); el.innerHTML="";
+    S.pal.forEach((c,i)=>{const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=c;b.title=S.names[i];b.setAttribute("aria-label","Pinsel "+S.names[i]);b.setAttribute("aria-pressed",String(i===S.brush));b.onclick=()=>{S.brush=i;renderSwatches();};el.appendChild(b);});
+    $(inp).value=S.pal[S.brush]; $(nm).textContent=S.names[S.brush];
+  }
+}
+for(const id of ["edColorIn"])$(id).addEventListener("input",e=>{S.pal[S.brush]=e.target.value;S.names[S.brush]="Farbe "+(S.brush+1);renderSwatches();refresh();});
+for(const id of ["edN"])$(id).addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const n=+b.dataset.n;if(n===S.n)return;S.n=n;rebuild();S.col=defaultColors(n);S.step=0;buildDisk();refresh(true);});
+$("segDir").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.cw=b.dataset.cw==="1";buildDisk();refresh();});
+function syncSeg(){[...$("edN").children].forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.n===S.n)));[...$("segDir").children].forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.cw==="1")===S.cw)));}
+
+function setColor(s){if(s<0)return;S.col[s]=S.brush;refresh();}
+
+/* ---------- disk (SVG) ---------- */
+const disk=$("disk"); let rotor, dots=[], threads=[], labels=[], arrowG, curRot=0, animFrom=0, animTo=0, animT0=0, animRaf=0;
+function el(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+const pol=(r,deg)=>{const a=deg*Math.PI/180;return [r*Math.sin(a),-r*Math.cos(a)];};
+function buildDisk(){
+  disk.innerHTML="";
+  const defs=el("defs",{},disk);
+  const mk=el("marker",{id:"ah",viewBox:"0 0 10 10",refX:"8",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},defs);
+  el("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--hi)"},mk);
+  rotor=el("g",{},disk);
+  el("circle",{cx:0,cy:0,r:150,fill:"var(--disk)",stroke:"var(--disk-edge)","stroke-width":1.5},rotor);
+  el("circle",{cx:0,cy:0,r:20,fill:"var(--bg)",stroke:"var(--disk-edge)","stroke-width":1.5},rotor);
+  for(let i=0;i<SL;i++){const c=(i+.5)*DEG;const [x1,y1]=pol(150,c),[x2,y2]=pol(128,c);el("line",{x1,y1,x2,y2,stroke:"var(--disk-edge)","stroke-width":2.2,"stroke-linecap":"round"},rotor);}
+  for(const b of [0,90,180,270]){const [x,y]=pol(140,b);el("circle",{cx:x,cy:y,r:3.2,fill:"var(--muted)"},rotor);}
+  labels=[];
+  for(let i=0;i<SL;i++){const [x,y]=pol(162,(i+.5)*DEG);const t=el("text",{x,y,"text-anchor":"middle","dominant-baseline":"central","font-family":"IBM Plex Mono, monospace","font-size":10.5,fill:"var(--muted)"},rotor);t.textContent=label(i);labels.push({t,x,y});}
+  const thrG=el("g",{},rotor); arrowG=el("g",{},rotor); const dotG=el("g",{},rotor);
+  threads=[];dots=[];
+  for(let s=0;s<S.n;s++){
+    threads.push(el("line",{x1:0,y1:0,x2:0,y2:0,"stroke-width":2.4,"stroke-linecap":"round",opacity:.9},thrG));
+    const d=el("circle",{r:8.5,"stroke-width":1.5},dotG);
+    d.addEventListener("pointerenter",()=>setHover(s));d.addEventListener("pointerleave",()=>setHover(-1));
+    dots.push(d);
+  }
+  // fixed "oben" marker
+  el("path",{d:"M-7,-176 L7,-176 L0,-165 z",fill:"var(--accent)"},disk);
+  curRot=SIM.rot[Math.min(S.step,SIM.rot.length-1)]; applyRot(curRot);
+  $("diskInfo").textContent=S.n+" Fäden · 32 Schlitze";
+}
+function applyRot(a){
+  rotor.setAttribute("transform",`rotate(${-a})`);
+  for(const l of labels)l.t.setAttribute("transform",`rotate(${a} ${l.x} ${l.y})`);
+}
+function animateRot(to){
+  cancelAnimationFrame(animRaf);
+  if(RM){curRot=to;applyRot(to);return;}
+  animFrom=curRot;animTo=to;animT0=performance.now();
+  const tick=now=>{const t=Math.min(1,(now-animT0)/420);const e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;curRot=animFrom+(animTo-animFrom)*e;applyRot(curRot);if(t<1)animRaf=requestAnimationFrame(tick);};
+  animRaf=requestAnimationFrame(tick);
+}
+function renderDisk(){
+  const snap=SIM.snaps[S.step]; const pos=[];
+  snap.forEach((s,i)=>{if(s>=0)pos[s]=i;});
+  for(let s=0;s<S.n;s++){
+    const [x,y]=pol(114,(pos[s]+.5)*DEG), [tx,ty]=pol(22,(pos[s]+.5)*DEG);
+    const c=colOf(s);
+    dots[s].setAttribute("cx",x);dots[s].setAttribute("cy",y);dots[s].setAttribute("fill",c);
+    dots[s].setAttribute("stroke",S.hover===s?"var(--hi)":mix(c,"#000000",.45));
+    dots[s].setAttribute("stroke-width",S.hover===s?3.5:1.5);
+    dots[s].setAttribute("aria-label",`Faden in Schlitz ${label(pos[s])}, ${nameOf(s)}`);
+    threads[s].setAttribute("x1",tx);threads[s].setAttribute("y1",ty);threads[s].setAttribute("x2",x);threads[s].setAttribute("y2",y);threads[s].setAttribute("stroke",c);
+  }
+  arrowG.innerHTML="";
+  const m=SIM.moves[S.step];
+  if(m){
+    for(const mv of [m.down,m.up]){
+      const [x1,y1]=pol(114,(mv.from+.5)*DEG),[x2,y2]=pol(104,(mv.to+.5)*DEG);
+      const cx=(x1+x2)*.18, cy=(y1+y2)*.18;
+      el("path",{d:`M${x1},${y1} Q${cx},${cy} ${x2},${y2}`,fill:"none",stroke:"var(--hi)","stroke-width":2.6,"stroke-dasharray":"6 4","marker-end":"url(#ah)"},arrowG);
+      const [rx,ry]=pol(114,(mv.from+.5)*DEG);
+      el("circle",{cx:rx,cy:ry,r:12.5,fill:"none",stroke:"var(--hi)","stroke-width":2},arrowG);
+    }
+  }
+  $("stepCount").textContent=S.step===0?"Aufbau":`Schritt ${S.step+1}`;
+  $("bPrev").disabled=S.step===0;
+  const G=SIM.G;
+  if(m){
+    const r=Math.floor(S.step/G)+1;
+    $("stepText").innerHTML=`<b>Schritt ${S.step+1}</b> <span class="note">(Runde ${r})</span><br>`+
+      `${chip(colOf(m.down.s))}Oben rechts, Schlitz <b class="num">${label(m.down.from)}</b>, nach unten rechts in Schlitz <b class="num">${label(m.down.to)}</b>.<br>`+
+      `${chip(colOf(m.up.s))}Unten links, Schlitz <b class="num">${label(m.up.from)}</b>, nach oben links in Schlitz <b class="num">${label(m.up.to)}</b>.<br>`+
+      `Dann die Scheibe gegen den Uhrzeigersinn drehen, bis das nächste Paar oben liegt.`;
+  }
+}
+function go(step){
+  step=Math.max(0,Math.min(SIM.moves.length-1,step));
+  S.step=step; animateRot(SIM.rot[step]); renderDisk(); markPlanRow();
+}
+$("bNext").onclick=()=>go(S.step+1);
+$("bPrev").onclick=()=>go(S.step-1);
+$("bReset").onclick=()=>go(0);
+
+/* ---------- stitch geometry shared ---------- */
+function stitchGeom(n){
+  const G=n/2, w=SL/G, span=G/2;            // width in slots, height in steps
+  return {G,w,span,lean:w*0.55,aspect:1.3};
+}
+function drawStitch(ctx,cx,cy,vx,vy,rx,fill,hl){
+  const len=Math.hypot(vx,vy)/2*1.1, th=Math.atan2(-vx,vy);
+  if(![cx,cy,rx,len].every(Number.isFinite))return;
+  ctx.beginPath();ctx.ellipse(cx,cy,Math.max(rx,.1),len,th,0,Math.PI*2);
+  const g=ctx.createLinearGradient(cx-rx*Math.cos(th),cy-rx*Math.sin(th),cx+rx*Math.cos(th),cy+rx*Math.sin(th));
+  g.addColorStop(0,mix(fill,"#000000",.34));g.addColorStop(.42,mix(fill,"#ffffff",.16));g.addColorStop(1,mix(fill,"#000000",.28));
+  ctx.fillStyle=g;ctx.fill();
+  ctx.lineWidth=hl?2.4:.8;ctx.strokeStyle=hl?getCss("--hi"):mix(fill,"#000000",.5);ctx.stroke();
+}
+let cssCache={};
+function getCss(v){if(!(v in cssCache))cssCache[v]=getComputedStyle(document.documentElement).getPropertyValue(v).trim();return cssCache[v];}
+
+/* ---------- unrolled chart ---------- */
+function drawChart(ctx,W,H,colors,opts){
+  const n=colors.length, {G,w,span,lean,aspect}=stitchGeom(n);
+  const slotW=W/SL, rowH=slotW*w/span*aspect;
+  const rows=Math.ceil(H/rowH)+1, k0=2*n, kTop=k0+rows;
+  const sims=opts.sim;
+  ctx.fillStyle=getCss("--gap")||"#222";ctx.fillRect(0,0,W,H);
+  const hits=[];
+  const Y=k=>(kTop-k)*rowH - (rowH*rows-H);
+  for(const st of sims.stitches){
+    if(st.k<k0-span-2||st.k>kTop+1)continue;
+    const yb=Y(st.k), yt=Y(st.k+span);
+    const xb=W-(st.slot+.5)*slotW, xt=W-(st.slot+.5-lean)*slotW; // leans toward newer stitches
+    const cx=(xb+xt)/2, cy=(yb+yt)/2;
+    for(const off of [-W,0,W]){
+      const X=cx+off; if(X<-w*slotW||X>W+w*slotW)continue;
+      drawStitch(ctx,X,cy,xt-xb,yt-yb,w*slotW*0.44,colors[st.s],opts.hover===st.s);
+      if(opts.hits)hits.push({x:X,y:cy,s:st.s,r:w*slotW*0.5});
+    }
+  }
+  return hits;
+}
+const chart=$("chart"); let chartHits=[], chartW=0, chartH=0;
+function sizeCanvas(c,w,h){const d=window.devicePixelRatio||1;c.width=Math.round(w*d);c.height=Math.round(h*d);c.style.height=h+"px";const x=c.getContext("2d");x.setTransform(d,0,0,d,0,0);return x;}
+function renderChart(){
+  const W=chart.parentElement.clientWidth-28; if(W<=0)return;
+  const H=Math.round(Math.max(280,Math.min(460,W*0.72)));
+  if(W!==chartW||H!==chartH){chartW=W;chartH=H;}
+  const ctx=sizeCanvas(chart,W,H);
+  chartHits=drawChart(ctx,W,H,S.col.map(i=>S.pal[i]),{sim:SIM,hover:S.hover,hits:true});
+}
+function hitAt(e){
+  const r=chart.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+  let best=-1,bd=1e9;
+  for(const h of chartHits){const d=Math.hypot(h.x-x,h.y-y);if(d<bd&&d<h.r*1.6){bd=d;best=h.s;}}
+  return best;
+}
+chart.addEventListener("pointermove",e=>setHover(hitAt(e)));
+chart.addEventListener("pointerleave",()=>setHover(-1));
+
+/* ---------- cord (cylinder) ---------- */
+const cord=$("cord"); let cordRot=200, dragX=null, cordCtx=null, cordW=0, cordH=0, lastT=0;
+function sizeCord(){cordW=Math.min(190,cord.parentElement.clientWidth-28);cordH=Math.round(Math.max(280,Math.min(460,chartH||380)));cordCtx=sizeCanvas(cord,cordW,cordH);}
+function renderCord(){
+  if(!cordCtx)return;
+  const ctx=cordCtx, W=cordW, H=cordH, n=S.n, {w,span,lean,aspect}=stitchGeom(n);
+  if(!(W>=40&&H>=40))return;
+  const R=Math.min(W*0.34,58), cx=W/2, u=2*Math.PI*R/SL, rowH=u*w/span*aspect;
+  ctx.clearRect(0,0,W,H);
+  const bg=ctx.createLinearGradient(cx-R,0,cx+R,0);bg.addColorStop(0,"#0b0c10");bg.addColorStop(.5,getCss("--gap"));bg.addColorStop(1,"#0b0c10");
+  ctx.fillStyle=bg;ctx.fillRect(cx-R,0,2*R,H);
+  const rows=Math.ceil(H/rowH)+1,k0=2*n,kTop=k0+rows;
+  const Y=k=>(kTop-k)*rowH-(rowH*rows-H);
+  const items=[];
+  const v=cordRot*Math.PI/180;
+  for(const st of SIM.stitches){
+    if(st.k<k0-span-2||st.k>kTop+1)continue;
+    const ab=(st.slot+.5)*DEG*Math.PI/180, at=(st.slot+.5-lean)*DEG*Math.PI/180;
+    const am=(ab+at)/2, depth=Math.cos(am-v);
+    if(depth<0.02)continue;
+    const xb=cx+R*Math.sin(v-ab), xt=cx+R*Math.sin(v-at);
+    items.push({depth,xb,xt,yb:Y(st.k),yt:Y(st.k+span),s:st.s});
+  }
+  items.sort((a,b)=>a.depth-b.depth);
+  for(const it of items){
+    const c=S.pal[S.col[it.s]];
+    const shaded=it.depth<1?mixHex(c,"#000000",(1-it.depth)*0.6):c;
+    drawStitch(ctx,(it.xb+it.xt)/2,(it.yb+it.yt)/2,it.xt-it.xb,it.yt-it.yb,R*(2*Math.PI/(SL/w))*0.5*Math.max(it.depth,.15),shaded,S.hover===it.s);
+  }
+  const sh=ctx.createLinearGradient(cx-R,0,cx+R,0);sh.addColorStop(0,"rgba(0,0,0,.35)");sh.addColorStop(.35,"rgba(0,0,0,0)");sh.addColorStop(.7,"rgba(255,255,255,.06)");sh.addColorStop(1,"rgba(0,0,0,.4)");
+  ctx.fillStyle=sh;ctx.fillRect(cx-R,0,2*R,H);
+}
+function mixHex(h,t,a){const c=rgb(h),d=rgb(t);return "#"+c.map((x,i)=>Math.round(x+(d[i]-x)*a).toString(16).padStart(2,"0")).join("");}
+cord.addEventListener("pointerdown",e=>{dragX=e.clientX;cord.setPointerCapture(e.pointerId);cord.style.cursor="grabbing";});
+cord.addEventListener("pointermove",e=>{if(dragX===null)return;cordRot-= (e.clientX-dragX)*0.9;dragX=e.clientX;renderCord();});
+const endDrag=()=>{dragX=null;cord.style.cursor="grab";};
+cord.addEventListener("pointerup",endDrag);cord.addEventListener("pointercancel",endDrag);
+$("bSpin").onclick=()=>{S.spin=!S.spin;$("bSpin").textContent=S.spin?"Anhalten":"Drehen";if(S.spin)requestAnimationFrame(loop);};
+function loop(t){
+  if(!S.spin){lastT=0;return;}
+  if(lastT&&dragX===null){cordRot+=(t-lastT)*0.018;renderCord();}
+  lastT=t;requestAnimationFrame(loop);
+}
+
+/* ---------- hover sync ---------- */
+function setHover(s){
+  if(s===S.hover)return; S.hover=s;
+  renderChart(); if(!S.spin)renderCord(); renderDisk();
+  document.querySelectorAll(".bead").forEach(b=>b.classList.toggle("hov",+b.dataset.s===s));
+  const info=$("hoverInfo");
+  if(s<0){info.textContent="Zeig auf einen Stich, um zu sehen, von welchem Faden er stammt.";return;}
+  const j=NECK.indexOf(s);
+  info.innerHTML=`${chip(colOf(s))}Faden mit Startschlitz <b class="num">${label(SIM.init[s])}</b> · ${nameOf(s)} · Platz ${j+1} von ${S.n} in der Musterkette.`;
+}
+
+/* ---------- necklace ---------- */
+function renderBeads(){
+  const el=$("beads");el.innerHTML="";
+  NECK.forEach(s=>{const b=document.createElement("button");b.type="button";b.className="bead";b.dataset.s=s;b.style.background=colOf(s);
+    b.innerHTML=`<span>${label(SIM.init[s])}</span>`;b.setAttribute("aria-label",`Faden Startschlitz ${label(SIM.init[s])}, ${nameOf(s)}`);
+    b.onpointerenter=()=>setHover(s);b.onpointerleave=()=>setHover(-1);el.appendChild(b);});
+}
+
+/* ---------- plan, setup, facts ---------- */
+function renderPlan(){
+  const G=SIM.G, body=$("planBody"); let h="";
+  for(let k=0;k<2*G;k++){
+    const m=SIM.moves[k];
+    h+=`<tr data-k="${k}" class="${k%G===0&&k>0?"round":""}"><td class="num">${k+1}</td><td class="num">${label(m.top[0])} · ${label(m.top[1])}</td>`+
+      `<td>${chip(colOf(m.down.s))}<span class="num">${label(m.down.from)}</span><span class="arrow">→</span><span class="num">${label(m.down.to)}</span></td>`+
+      `<td>${chip(colOf(m.up.s))}<span class="num">${label(m.up.from)}</span><span class="arrow">→</span><span class="num">${label(m.up.to)}</span></td></tr>`;
+  }
+  body.innerHTML=h;
+  body.querySelectorAll("tr").forEach(r=>r.onclick=()=>{go(+r.dataset.k);$("studio").scrollIntoView({behavior:RM?"auto":"smooth"});});
+  markPlanRow();
+  const per=patternPeriod();
+  $("planNote").innerHTML=`Nach jedem Schritt die Scheibe gegen den Uhrzeigersinn drehen, bis das nächste Paar oben liegt. Eine Runde hat ${G} Schritte; danach geht es genauso weiter, die Paare sind dann um zwei Schlitze gewandert. Das Muster wiederholt sich alle <b class="num">${per}</b> Schritte.`;
+}
+function markPlanRow(){document.querySelectorAll("#planBody tr").forEach(r=>r.classList.toggle("cur",+r.dataset.k===S.step));}
+function patternPeriod(){
+  const n=S.n, c=NECK.map(s=>S.col[s]);
+  for(let r=1;r<=n;r++){if(n%r)continue;let ok=true;for(let j=0;j<n;j++)if(c[j]!==c[(j+r)%n]){ok=false;break;}if(ok)return r;}
+  return n;
+}
+function renderSetup(){
+  const G=SIM.G;let h="";
+  for(let g=0;g<G;g++){const a=2*g,b=2*g+1;h+=`<div><span class="num">${label(SIM.init[a])} | ${label(SIM.init[b])}</span>${chip(colOf(a))}${nameOf(a)} ${chip(colOf(b))}${nameOf(b)}</div>`;}
+  $("setupList").innerHTML=h;
+  const cnt={};S.col.forEach(c=>cnt[c]=(cnt[c]||0)+1);
+  $("facts").innerHTML=`<span>Fäden <b>${S.n}</b></span><span>Farben <b>${Object.keys(cnt).length}</b></span><span>Rapport <b>${patternPeriod()}</b> Schritte</span>`;
+}
+
+/* ---------- material ---------- */
+function renderMaterial(){
+  const L=+$("inLen").value||0, f=+$("inFac").value||1, a=+$("inAdd").value||0;
+  const per=L*f+a, cnt={}, fold={};
+  S.col.forEach(c=>cnt[c]=(cnt[c]||0)+1);
+  // opposite strands: strand s and s+n/2 start in opposite slots
+  for(let s=0;s<S.n/2;s++){if(S.col[s]===S.col[s+S.n/2])fold[S.col[s]]=(fold[S.col[s]]||0)+1;}
+  let h="",tot=0;
+  Object.keys(cnt).map(Number).sort((x,y)=>x-y).forEach(c=>{const t=cnt[c]*per;tot+=t;
+    h+=`<tr><td>${chip(S.pal[c])}${S.names[c]}</td><td class="num">${cnt[c]}</td><td class="num">${fmt(per)}</td><td class="num">${fmt(t)}</td><td class="num">${fold[c]?fold[c]+" × "+fmt(2*per):"–"}</td></tr>`;});
+  h+=`<tr><td><b>Summe</b></td><td class="num">${S.n}</td><td></td><td class="num"><b>${fmt(tot)}</b></td><td></td></tr>`;
+  $("matBody").innerHTML=h;
+}
+const fmt=cm=>cm>=100?(cm/100).toLocaleString("de-AT",{maximumFractionDigits:2})+" m":Math.round(cm)+" cm";
+["inLen","inFac","inAdd"].forEach(id=>$(id).addEventListener("input",renderMaterial));
+
+/* ---------- catalog ---------- */
+let CAT=null;
+function buildCatalog(n){
+  const M=(1<<n)-1, seen=new Uint8Array(1<<n), reps=[];
+  const rev=v=>{let r=0;for(let i=0;i<n;i++)if(v>>i&1)r|=1<<(n-1-i);return r;};
+  const rot=(v,r)=>((v<<r)|(v>>>(n-r)))&M;
+  for(let v=0;v<=M;v++){
+    if(seen[v])continue; reps.push(v);
+    for(const w of [v,rev(v)])for(let r=0;r<n;r++){const x=r?rot(w,r):w;seen[x]=1;seen[M^x]=1;}
+  }
+  const pop=v=>{let c=0;while(v){c+=v&1;v>>>=1;}return c;};
+  return reps.map(v=>({v,spots:Math.min(pop(v),n-pop(v))}));
+}
+function renderCatalog(){
+  if(!CAT||CAT.n!==S.n){CAT={n:S.n,list:buildCatalog(S.n)};if(S.catSpots>S.n/2)S.catSpots=2;}
+  const counts={};CAT.list.forEach(p=>counts[p.spots]=(counts[p.spots]||0)+1);
+  $("catNote").innerHTML=`${CAT.list.length} verschiedene Muster mit ${S.n} Fäden in ${chip(S.pal[0])}${S.names[0]} und ${chip(S.pal[1])}${S.names[1]} (die ersten beiden Pinselfarben). Gefiltert nach Anzahl der Fäden in der selteneren Farbe. Klick übernimmt das Muster.`;
+  const f=$("filters");f.innerHTML="";
+  Object.keys(counts).map(Number).sort((a,b)=>a-b).forEach(k=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",String(k===S.catSpots));b.innerHTML=`${k===0?"einfarbig":k+(k===1?" Faden":" Fäden")}<small>${counts[k]}</small>`;b.onclick=()=>{S.catSpots=k;renderCatalog();};f.appendChild(b);});
+  const g=$("catGrid");g.innerHTML="";
+  const A=S.pal[0],B=S.pal[1];
+  CAT.list.filter(p=>p.spots===S.catSpots).forEach((p,idx)=>{
+    const t=document.createElement("button");t.type="button";t.className="tile";t.setAttribute("aria-label","Muster "+(idx+1)+" übernehmen");
+    const c=document.createElement("canvas");const cw=120,ch=96;
+    const ctx=sizeCanvas(c,cw,ch);c.style.height="auto";
+    const colors=new Array(S.n);NECK.forEach((s,j)=>colors[s]=(p.v>>j&1)?B:A);
+    drawChart(ctx,cw,ch,colors,{sim:SIM,hover:-1});
+    const sp=document.createElement("span");sp.textContent="#"+(idx+1);
+    t.append(c,sp);
+    t.onclick=()=>{NECK.forEach((s,j)=>S.col[s]=(p.v>>j&1)?1:0);go(0);edFromPlan(true);refresh(true);setName("Katalog "+S.n+"-"+(idx+1));showSub("rund","editor");};
+    g.appendChild(t);
+  });
+}
+
+/* ---------- shared helpers for other thread counts ---------- */
+const SIMS={};
+function getSim(n){if(n===S.n&&SIM)return SIM;if(!SIMS[n])SIMS[n]=simulate(n,KSIM);return SIMS[n];}
+const neckOf=sim=>sim.moves.slice(0,sim.n).map(m=>m.up.s);
+function thumb(n,neckIdx,pal,cw,ch){
+  const sim=getSim(n), nk=neckOf(sim), colors=new Array(n);
+  nk.forEach((s,j)=>colors[s]=pal[neckIdx[j]]||pal[0]);
+  const c=document.createElement("canvas");const ctx=sizeCanvas(c,cw,ch);c.style.height="auto";
+  drawChart(ctx,cw,ch,colors,{sim,hover:-1});return c;
+}
+
+/* ---------- pattern library ---------- */
+const TPL={
+ 16:[["Einfarbig","AAAAAAAAAAAAAAAA"],["Spirale fein","ABABABABABABABAB"],["Spirale breit","AABBAABBAABBAABB"],["Zickzack","AABBBBAAAABBBBAA"],
+     ["Querbänder","AAAABBBBAAAABBBB"],["Versetzte Blöcke","AAAAAAAABBBBBBBB"],["Striche","AABBBBBBAABBBBBB"],["Punktlinien","AAAAAAABAAAAAAAB"],
+     ["Einzelne Punkte","AAAAAAAAAAAAAAAB"],["Zwei schmale Spiralen","AAABAAABAAABAAAB"],["Spirale mit Akzent","ABACABACABACABAC"],
+     ["Dreifarbige Streifen","AABBAACCAABBAACC"],["Vierfarbige Streifen","AABBCCDDAABBCCDD"],["Bänder, dreifarbig","AAAABBBBAAAACCCC"]],
+ 8:[["Einfarbig","AAAAAAAA"],["Spirale","ABABABAB"],["Querbänder","AABBAABB"],["Rauten","AAAABBBB"],["Punkte","AAAAAAAB"],["Punktreihen","AAABAAAB"],["Bänder, dreifarbig","AABBAACC"]]
+};
+const tplNeck=str=>[...str].map(ch=>ch.charCodeAt(0)-65);
+let LIBTAB="vorlagen", DB=null, DL=null, OWN=[], armedDel=null;
+const HEX=/^#[0-9a-fA-F]{6}$/;
+function currentRecord(name){
+  const rec={kumihimo:1,name:(name||"").trim()||"Muster",n:S.n,neck:NECK.map(s=>S.col[s]).join(""),pal:S.pal.slice(),names:S.names.slice(),saved:Date.now()};
+  if(ED.cells&&ED.n===S.n)rec.matrix=ED.cells.map(r=>r.map(v=>v<0?".":String(v)).join(""));
+  return rec;
+}
+function validRecord(o){
+  if(!o||typeof o!=="object")return null;
+  const n=+o.n; if(n!==8&&n!==16)return null;
+  const neck=typeof o.neck==="string"?[...o.neck].map(Number):Array.isArray(o.neck)?o.neck.map(Number):null;
+  if(!neck||neck.length!==n||neck.some(v=>!(v>=0&&v<6)))return null;
+  const pal=Array.isArray(o.pal)?o.pal.filter(h=>typeof h==="string"&&HEX.test(h)).slice(0,6):[];
+  const names=Array.isArray(o.names)?o.names.map(x=>String(x).slice(0,30)):[];
+  let matrix=null;
+  if(Array.isArray(o.matrix)&&o.matrix.length>=4&&o.matrix.length<=32&&o.matrix.every(r=>typeof r==="string"&&r.length===n/2&&/^[.0-5]+$/.test(r)))matrix=o.matrix;
+  return {name:String(o.name||"Muster").slice(0,60),n,neck,pal,names,matrix,saved:+o.saved||0,id:o.id};
+}
+function fullPal(p){
+  const pal=p.pal.slice(), names=p.names.slice(0,pal.length);
+  while(names.length<pal.length)names.push("Farbe "+(names.length+1));
+  for(const [h,nm] of DEFAULT_PAL){if(pal.length>=6)break;if(!pal.includes(h)){pal.push(h);names.push(nm);}}
+  return {pal,names};
+}
+function applyPattern(p,fromTpl){
+  if(!fromTpl&&p.pal.length){const f=fullPal(p);S.pal=f.pal;S.names=f.names;}
+  if(p.n!==S.n){S.n=p.n;rebuild();S.step=0;buildDisk();}
+  S.col=new Array(S.n);NECK.forEach((s,j)=>S.col[s]=p.neck[j]);
+  if(p.matrix){ED.n=p.n;ED.R=p.matrix.length;ED.cells=p.matrix.map(r=>[...r].map(ch=>ch==="."?-1:+ch));}
+  else edFromPlan();
+  S.brush=0;go(0);refresh(true);edRender();
+}
+function renderLibrary(){
+  [...$("libTabs").children].forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===LIBTAB)));
+  $("ownCount").textContent=OWN.length?"("+OWN.length+")":"";
+  const g=$("libGrid");g.innerHTML="";
+  if(LIBTAB==="vorlagen"){
+    $("libNote").textContent=`Vorlagen für ${S.n} Fäden in deinen aktuellen Pinselfarben. Klick lädt das Muster auf die Scheibe und in den Editor. Für ${S.n===16?8:16} Fäden die Fadenzahl im Editor umstellen.`;
+    TPL[S.n].forEach(([name,str])=>{
+      const neck=tplNeck(str);
+      const t=tile(name,thumb(S.n,neck,S.pal,128,92),`${new Set(neck).size} ${new Set(neck).size===1?"Farbe":"Farben"}`);
+      t.onclick=()=>{applyPattern({n:S.n,neck,pal:[],names:[],matrix:null},true);setName(name);msg(`„${name}“ geladen.`);showSub("rund","editor");};
+      g.appendChild(t);
+    });
+  }else{
+    $("libNote").textContent=DB?"Deine gespeicherten Muster. Sie liegen beim Artefakt und sind auf jedem Gerät da, auf dem du den Planer öffnest.":"Deine gespeicherten Muster. Sie liegen in diesem Browser; mit „Als Datei speichern“ oder „Code kopieren“ nimmst du sie mit.";
+    if(!OWN.length){const e=document.createElement("div");e.className="empty";e.textContent="Noch keine eigenen Muster. Gib unten einen Namen ein und tippe auf Speichern.";g.appendChild(e);return;}
+    OWN.forEach(p=>{
+      const d=p.saved?new Date(p.saved).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
+      const t=tile(p.name,thumb(p.n,p.neck,fullPal(p).pal,128,92),`${p.n} Fäden${d?" · "+d:""}${p.matrix?" · mit Zeichnung":""}`);
+      t.onclick=e=>{if(e.target.closest(".del"))return;applyPattern(p);setName(p.name);msg(`„${p.name}“ geladen.`);showSub("rund","editor");};
+      const del=document.createElement("span");del.className="del";del.setAttribute("role","button");del.tabIndex=0;del.title="Löschen";del.textContent="×";
+      if(armedDel===p.id){del.classList.add("armed");del.textContent="Löschen?";}
+      const act=e=>{e.stopPropagation();if(armedDel===p.id){armedDel=null;removeOwn(p);}else{armedDel=p.id;renderLibrary();}};
+      del.onclick=act;del.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();act(e);}};
+      t.appendChild(del);g.appendChild(t);
+    });
+  }
+}
+function tile(name,canvas,sub){
+  const t=document.createElement("button");t.type="button";t.className="tile";t.setAttribute("aria-label",name+" laden");
+  const b=document.createElement("b");b.textContent=name;const s=document.createElement("span");s.textContent=sub;
+  t.append(canvas,b,s);return t;
+}
+$("libTabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;LIBTAB=b.dataset.tab;armedDel=null;renderLibrary();});
+function msg(t){$("saveMsg").textContent=t;}
+
+/* own patterns: artifact db when available, else this browser */
+function localOwn(){try{return (JSON.parse(localStorage.getItem("kumihimo-muster")||"[]")||[]).map(validRecord).filter(Boolean);}catch(e){return [];}}
+function writeLocalOwn(list){try{localStorage.setItem("kumihimo-muster",JSON.stringify(list.map(p=>({...p,neck:p.neck.join("")}))));return true;}catch(e){return false;}}
+async function saveOwn(rec){
+  if(DB){try{await DB.collection("muster").add(rec);return true;}catch(e){msg("Speichern im Artefakt hat nicht geklappt ("+(e&&e.code||"Fehler")+"). Ich lege es in diesem Browser ab.");}}
+  const list=localOwn();const p=validRecord({...rec,id:"l"+Date.now()});list.unshift(p);OWN=list;
+  const ok=writeLocalOwn(list);renderLibrary();return ok;
+}
+async function removeOwn(p){
+  if(DB&&!String(p.id).startsWith("l")){try{await DB.doc("muster/"+p.id).delete();}catch(e){msg("Löschen hat nicht geklappt. Bitte später noch einmal.");}return;}
+  OWN=localOwn().filter(x=>x.id!==p.id);writeLocalOwn(OWN);renderLibrary();msg(`„${p.name}“ gelöscht.`);
+}
+$("bSave").onclick=async()=>{
+  const name=$("saveName").value.trim();
+  if(!name){msg("Bitte zuerst einen Namen eingeben.");$("saveName").focus();return;}
+  const ok=await saveOwn(currentRecord(name));
+  if(ok){msg(`„${name}“ gespeichert.`);LIBTAB="eigene";renderLibrary();}
+};
+$("saveName").addEventListener("keydown",e=>{if(e.key==="Enter")$("bSave").click();});
+function slug(s){return (s||"kumihimo-muster").toLowerCase().replace(/[äöüß]/g,c=>({ä:"ae",ö:"oe",ü:"ue",ß:"ss"}[c])).replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"kumihimo-muster";}
+const LOCALFILE=!window.claude;   // eigenständig: lokal per Datei oder auf eigenem Webspace
+if(LOCALFILE)$("bExport").hidden=false;
+$("bExport").onclick=async()=>{
+  const name=$("saveName").value.trim()||"Kumihimo-Muster";
+  if(!DL&&LOCALFILE){
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(currentRecord(name),null,1)],{type:"application/json"}));
+    a.download=slug(name)+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+    msg("Datei erstellt. Lege sie in den Ordner Muster.");return;
+  }
+  try{await DL.save({filename:slug(name)+".json",data:JSON.stringify(currentRecord(name),null,1)});msg("Datei gespeichert.");}
+  catch(e){const c=e&&e.code;if(c==="declined")msg("Speichern abgebrochen.");else if(c==="rate_limited")msg("Es ist schon ein Speicherdialog offen.");else{msg("Dateien lassen sich hier nicht speichern. Nimm „Code kopieren“.");$("bExport").hidden=true;}}
+};
+$("bCopy").onclick=()=>{
+  const txt=JSON.stringify(currentRecord($("saveName").value));
+  const fallback=()=>{$("pasteBox").hidden=false;const ta=$("pasteIn");ta.value=txt;ta.focus();ta.select();msg("Code markiert – mit Strg+C kopieren.");};
+  try{navigator.clipboard.writeText(txt).then(()=>msg("Code kopiert. Du kannst ihn per Nachricht oder Notiz weitergeben."),fallback);}catch(e){fallback();}
+};
+$("bPasteToggle").onclick=()=>{const b=$("pasteBox");b.hidden=!b.hidden;if(!b.hidden){$("pasteIn").value="";$("pasteIn").focus();}};
+function importText(txt,src){
+  let o=null;try{o=JSON.parse(txt);}catch(e){}
+  if(o&&o.typ==="eckig"){importObjects([o],msg);return;}
+  const p=validRecord(o);
+  if(!p){msg(`${src} enthält kein Kumihimo-Muster, das ich lesen kann.`);return;}
+  applyPattern(p);setName(p.name);msg(`„${p.name}“ geladen. Mit Speichern kommt es zu „Meine Muster“.`);
+}
+$("bPasteLoad").onclick=()=>importText($("pasteIn").value,"Der Code");
+$("fileIn").addEventListener("change",async e=>{
+  const files=[...(e.target.files||[])];e.target.value="";if(!files.length)return;
+  const objs=await readFiles(files);
+  if(objs.length===1&&!(objs[0]&&objs[0].typ==="eckig")){importText(JSON.stringify(objs[0]),"Die Datei");return;}
+  await importObjects(objs,msg);LIBTAB="eigene";renderLibrary();
+});
+
+async function initStores(){
+  OWN=localOwn();renderLibrary();
+  const use=window.claude&&window.claude.use;
+  if(!use)return;
+  use.call(window.claude,"downloads").then(d=>{if(d){DL=d;$("bExport").hidden=false;$("qbExport").hidden=false;}}).catch(()=>{});
+  try{
+    const db=await window.claude.use("db");
+    if(!db)return;
+    DB=db;
+    db.collection("muster").onSnapshot(snap=>{
+      const remote=snap.docs.map(d=>validRecord({...d.data(),id:d.id})).filter(Boolean);
+      OWN=remote.concat(localOwn()).sort((a,b)=>(b.saved||0)-(a.saved||0));
+      armedDel=null;renderLibrary();
+    },()=>{DB=null;OWN=localOwn();renderLibrary();});
+    db.collection("muster-eckig").onSnapshot(snap=>{
+      const remote=snap.docs.map(d=>qValid({...d.data(),id:d.id})).filter(Boolean);
+      QOWN=remote.concat(qLocalOwn()).sort((a,b)=>(b.saved||0)-(a.saved||0));qArmed=null;qRenderOwn();
+    },()=>{QOWN=qLocalOwn();qRenderOwn();});
+  }catch(e){}
+}
+
+/* ---------- matrix editor ---------- */
+const ED={n:null,R:12,cells:null,tool:"pen",mode:"free",fit:null,hover:null,T:null,painting:false,lastCell:null};
+function edTable(n){
+  const sim=getSim(n),G=n/2,h=G/2,w=SL/G,T=[[],[],[],[]];
+  for(const st of sim.stitches){const r=Math.floor(st.k/h);if(r<4||r>=8)continue;T[r%4][mod(30-r-st.slot,SL)/w]=st.s;}
+  return T;
+}
+const edStrand=(i,c)=>ED.T[mod(ED.R-1-i,4)][c];
+function edEnsure(){
+  if(ED.n!==S.n||!ED.cells){ED.n=S.n;edFromPlan(true);}
+  ED.T=edTable(S.n);
+}
+function edFromPlan(silent){
+  ED.n=S.n;ED.T=edTable(S.n);const G=S.n/2;
+  ED.cells=Array.from({length:ED.R},(_,i)=>Array.from({length:G},(_,c)=>S.col[edStrand(i,c)]));
+  if(!silent)edRender();
+}
+function edResize(R){
+  const old=ED.cells,oR=old.length,G=ED.n/2;
+  const rowFromBottom=rb=>{while(rb>=oR)rb-=4;return rb>=0?old[oR-1-rb].slice():new Array(G).fill(-1);};
+  ED.cells=Array.from({length:R},(_,i)=>rowFromBottom(R-1-i));ED.R=R;
+}
+function edSolve(){
+  const n=S.n,votes=Array.from({length:n},()=>({})),freq={};let total=0;
+  ED.cells.forEach((row,i)=>row.forEach((v,c)=>{if(v<0)return;const s=edStrand(i,c);votes[s][v]=(votes[s][v]||0)+1;freq[v]=(freq[v]||0)+1;total++;}));
+  const top=Object.keys(freq).map(Number).sort((a,b)=>freq[b]-freq[a]);
+  const col=new Array(n);let free=0;
+  for(let s=0;s<n;s++){
+    const ks=Object.keys(votes[s]).map(Number);
+    if(!ks.length){col[s]=top.length?top[0]:0;free++;continue;}
+    ks.sort((a,b)=>(votes[s][b]-votes[s][a])||(freq[b]-freq[a]));col[s]=ks[0];
+  }
+  let miss=0;ED.cells.forEach((row,i)=>row.forEach((v,c)=>{if(v>=0&&v!==col[edStrand(i,c)])miss++;}));
+  ED.fit={col,miss,total,free};
+}
+function edGeom(cv){
+  const G=ED.n/2,W=Math.max(120,cv.parentElement.clientWidth-28);
+  const cell=Math.floor(Math.min(46,W/G,Math.max(18,560/ED.R)));
+  return {G,W,cell,ox:Math.floor((W-cell*G)/2),H:cell*ED.R};
+}
+let hatch=null;
+function hatchPattern(ctx){
+  const p=document.createElement("canvas");p.width=p.height=8;const x=p.getContext("2d");
+  x.strokeStyle=getCss("--line");x.lineWidth=1.2;x.beginPath();x.moveTo(0,8);x.lineTo(8,0);x.stroke();
+  return ctx.createPattern(p,"repeat");
+}
+function edDraw(cv,getColor,marks){
+  const g=edGeom(cv),ctx=sizeCanvas(cv,g.W,g.H),{G,cell,ox}=g,gap=Math.max(1.5,cell*.07),rad=Math.min(6,cell*.18);
+  ctx.clearRect(0,0,g.W,g.H);
+  const hp=hatchPattern(ctx);
+  const hs=ED.hover?edStrand(ED.hover[0],ED.hover[1]):-1;
+  for(let i=0;i<ED.R;i++)for(let c=0;c<G;c++){
+    const x=ox+c*cell+gap/2,y=i*cell+gap/2,s=cell-gap,v=getColor(i,c);
+    ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,s,s,rad):ctx.rect(x,y,s,s);
+    if(v<0){ctx.fillStyle=getCss("--sunk");ctx.fill();ctx.fillStyle=hp;ctx.fill();}
+    else{const hex=S.pal[v];const gr=ctx.createLinearGradient(x,y,x+s,y+s);gr.addColorStop(0,mix(hex,"#ffffff",.12));gr.addColorStop(1,mix(hex,"#000000",.22));ctx.fillStyle=gr;ctx.fill();}
+    if(hs>=0&&edStrand(i,c)===hs){ctx.lineWidth=2.5;ctx.strokeStyle=getCss("--hi");ctx.stroke();}
+    if(marks&&marks(i,c)){const cx=x+s/2,cy=y+s/2,r=Math.max(3,s*.16);ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=getCss("--hi");ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=getCss("--surface");ctx.stroke();}
+  }
+  // repeat guides every 4 rows (counted from the bottom)
+  ctx.fillStyle=getCss("--muted");
+  for(let i=ED.R;i>0;i-=4){const y=i*cell;ctx.fillRect(Math.max(0,ox-8),y-1,5,1.5);ctx.fillRect(ox+G*cell+3,y-1,5,1.5);}
+  return g;
+}
+function edRender(save){
+  if(!ED.cells)return;
+  edEnsure();edSolve();
+  const f=ED.fit;
+  edDraw($("edCanvas"),(i,c)=>ED.cells[i][c],null);
+  edDraw($("edResult"),(i,c)=>f.col[edStrand(i,c)],(i,c)=>{const v=ED.cells[i][c];return v>=0&&v!==f.col[edStrand(i,c)];});
+  const G=S.n/2;
+  $("edInfo").textContent=`${G} × ${ED.R} Stiche`;
+  const pct=f.total?Math.round(100*(f.total-f.miss)/f.total):100;
+  $("edScore").textContent=f.miss?`${f.miss} Abweichungen`:"passt genau";
+  $("edPct").textContent=f.total?`${pct} % passen`:"Noch leer";
+  $("edMeter").style.width=pct+"%";
+  const used=[...new Set(f.col)];
+  let ex=!f.total?"Wähle in der Leiste über der Matrix eine Farbe und male in die linke Matrix. Das Ergebnis rechts zeigt sofort, was sich davon flechten lässt.":f.miss
+    ? `${f.miss} von ${f.total} gezeichneten Stichen lassen sich so nicht flechten; sie sind rechts markiert. Beim Kongo Gumi mit ${S.n} Fäden wiederholt sich das Muster alle 4 Reihen, und Reihe 3 und 4 sind immer Reihe 1 und 2, um eine halbe Runde (${G/2} Spalten) versetzt. Jeder Faden liefert genau diese zwei Stiche.`
+    : `Deine Zeichnung ist genau so flechtbar. Sie braucht ${used.length} ${used.length===1?"Farbe":"Farben"}.`;
+  if(f.free&&f.total)ex+=` ${f.free} ${f.free===1?"Faden war":"Fäden waren"} durch die Zeichnung nicht festgelegt und ${f.free===1?"bekommt":"bekommen"} die häufigste Farbe.`;
+  $("edExplain").textContent=ex;
+  $("edHint").textContent="Zeig auf eine Zelle: alle Stiche desselben Fadens leuchten auf.";
+  const sim=getSim(S.n);
+  {const pv=$("edPreview"),pw=Math.max(160,pv.parentElement.clientWidth-28),ph=Math.round(pw*0.5);drawChart(sizeCanvas(pv,pw,ph),pw,ph,f.col.map(i=>S.pal[i]),{sim,hover:-1});}
+  let h="";
+  for(let g=0;g<S.n/2;g++){const a=2*g,b=2*g+1;h+=`<div><span class="num">${label(sim.init[a])} | ${label(sim.init[b])}</span>${chip(S.pal[f.col[a]])}${S.names[f.col[a]]} ${chip(S.pal[f.col[b]])}${S.names[f.col[b]]}</div>`;}
+  $("edSetup").innerHTML=h;
+  const same=S.col.every((v,s)=>v===f.col[s]);
+  $("edApply").disabled=same;$("edApply").textContent=same?"Liegt schon auf der Scheibe":"Auf die Scheibe übernehmen";
+  $$("#edTool button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tool===ED.tool)));
+  $$("#edMode button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===ED.mode)));
+  $$("#edRows button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.r===ED.R)));
+  if(save!==false)edSave();
+}
+const $$=q=>[...document.querySelectorAll(q)];
+function edCellAt(cv,e){
+  const g=edGeom(cv),r=cv.getBoundingClientRect(),x=e.clientX-r.left-g.ox,y=e.clientY-r.top;
+  const c=Math.floor(x/g.cell),i=Math.floor(y/g.cell);
+  return (c>=0&&c<g.G&&i>=0&&i<ED.R)?[i,c]:null;
+}
+function edPaint(i,c){
+  const v=ED.tool==="erase"?-1:S.brush,G=ED.n/2;
+  if(ED.tool==="fill"){
+    const from=ED.cells[i][c];if(from===v)return;
+    const q=[[i,c]],seen=new Set();
+    while(q.length){const [a,b]=q.pop(),k=a*G+b;if(seen.has(k)||ED.cells[a][b]!==from)continue;seen.add(k);ED.cells[a][b]=v;
+      if(ED.mode==="braid")edTwins(a,b,v);
+      if(a>0)q.push([a-1,b]);if(a<ED.R-1)q.push([a+1,b]);q.push([a,mod(b-1,G)]);q.push([a,mod(b+1,G)]);}
+    return;
+  }
+  ED.cells[i][c]=v;if(ED.mode==="braid")edTwins(i,c,v);
+}
+function edTwins(i,c,v){const s=edStrand(i,c);for(let a=0;a<ED.R;a++)for(let b=0;b<ED.n/2;b++)if(edStrand(a,b)===s)ED.cells[a][b]=v;}
+function edHover(h){const k=h?h.join(","):null,o=ED.hover?ED.hover.join(","):null;if(k===o)return;ED.hover=h;edRender(false);}
+const edCv=$("edCanvas"),edRes=$("edResult");
+edCv.addEventListener("pointerdown",e=>{const h=edCellAt(edCv,e);if(!h)return;e.preventDefault();ED.painting=true;edCv.setPointerCapture(e.pointerId);edPaint(h[0],h[1]);ED.lastCell=h.join(",");edRender();});
+edCv.addEventListener("pointermove",e=>{const h=edCellAt(edCv,e);if(ED.painting&&h&&ED.tool!=="fill"&&h.join(",")!==ED.lastCell){ED.lastCell=h.join(",");edPaint(h[0],h[1]);ED.hover=h;edRender(false);}else edHover(h);});
+const edEnd=()=>{if(ED.painting)edSave();ED.painting=false;ED.lastCell=null;};
+edCv.addEventListener("pointerup",edEnd);edCv.addEventListener("pointercancel",edEnd);
+edCv.addEventListener("pointerleave",()=>{if(!ED.painting)edHover(null);});
+edRes.addEventListener("pointermove",e=>edHover(edCellAt(edRes,e)));
+edRes.addEventListener("pointerleave",()=>edHover(null));
+$("edTool").addEventListener("click",e=>{const b=e.target.closest("button");if(b){ED.tool=b.dataset.tool;edRender();}});
+$("edMode").addEventListener("click",e=>{const b=e.target.closest("button");if(b){ED.mode=b.dataset.mode;edRender();}});
+$("edRows").addEventListener("click",e=>{const b=e.target.closest("button");if(b){edResize(+b.dataset.r);edRender();}});
+$("edFromPlan").onclick=()=>{edFromPlan();};
+$("edClear").onclick=()=>{ED.cells=ED.cells.map(r=>r.map(()=>-1));edRender();};
+$("edApply").onclick=()=>{S.col=ED.fit.col.slice();go(0);refresh(true);showSub("rund","anleitung");};
+function edSave(){try{localStorage.setItem("kumihimo-editor",JSON.stringify({n:ED.n,R:ED.R,mode:ED.mode,cells:ED.cells.map(r=>r.map(v=>v<0?".":v).join(""))}));}catch(e){}}
+function edLoad(){
+  try{const d=JSON.parse(localStorage.getItem("kumihimo-editor")||"null");
+    if(d&&d.n===S.n&&Array.isArray(d.cells)&&d.cells.length===d.R&&d.cells.every(r=>typeof r==="string"&&r.length===d.n/2)){ED.n=d.n;ED.R=d.R;ED.mode=d.mode==="braid"?"braid":"free";ED.cells=d.cells.map(r=>[...r].map(ch=>ch==="."?-1:+ch));return true;}
+  }catch(e){}
+  return false;
+}
+function edDefault(){
+  ED.n=S.n;ED.T=edTable(S.n);
+  if(S.n===16){const rows=["10011001","01100110"];ED.R=12;ED.cells=Array.from({length:12},(_,i)=>[...rows[i%2]].map(Number));}
+  else edFromPlan(true);
+}
+
+/* ---------- PDF export (layout after Daniel's A4 house template) ---------- */
+function setName(n){$("saveName").value=n;$("pdfName").value=n;try{localStorage.setItem("kumihimo-name",n);}catch(e){}}
+$("saveName").addEventListener("input",e=>{$("pdfName").value=e.target.value;});
+$("pdfName").addEventListener("input",e=>{$("saveName").value=e.target.value;});
+try{const nm=localStorage.getItem("kumihimo-name");if(nm){$("saveName").value=nm;$("pdfName").value=nm;}}catch(e){}
+let jspdfP=null;
+function loadJsPdf(){
+  if(window.jspdf)return Promise.resolve(window.jspdf);
+  if(!jspdfP)jspdfP=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";sc.onload=()=>window.jspdf?res(window.jspdf):rej(new Error("jspdf"));sc.onerror=()=>{jspdfP=null;rej(new Error("load"));};document.head.appendChild(sc);});
+  return jspdfP;
+}
+const PT={prim:"#14304f",zweit:"#22496e",text:"#1a1a1a",leise:"#6c7680",linie:"#c9d0d7",zebra:"#f5f7f9"};
+const URHEBER="Aus einem Hirn und ein paar Milliarden Parametern: Daniel & Claude";
+function buildPdf(jsPDF){
+  const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+  const W=210,H=297,ML=18,MR=18,MT=24,MB=20,CW=W-ML-MR;
+  const name=($("pdfName").value||"").trim()||"Kumihimo-Muster";
+  const date=new Date().toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const n=S.n,G=n/2,sim=SIM,rgbA=h=>rgb(h);
+  const col=c=>doc.setTextColor(...rgbA(c)), draw=c=>doc.setDrawColor(...rgbA(c)), fill=c=>doc.setFillColor(...rgbA(c));
+  const font=(f,st,sz)=>{doc.setFont(f,st);doc.setFontSize(sz);};
+  let y=MT;
+  const need=h=>{if(y+h>H-MB){doc.addPage();y=MT+4;}};
+  const chipAt=(x,yy,hex,r=1.5)=>{fill(hex);draw(lum(hex)>0.8?PT.leise:mixHex(hex,"#000000",.35));doc.setLineWidth(0.2);doc.circle(x,yy,r,"FD");};
+  const arrow=(x1,x2,yy)=>{draw(PT.leise);doc.setLineWidth(0.25);doc.line(x1,yy,x2-1,yy);fill(PT.leise);doc.triangle(x2,yy,x2-1.6,yy-0.9,x2-1.6,yy+0.9,"F");};
+  const h2=(txt)=>{need(16);y+=6;font("times","bold",13.5);col(PT.prim);doc.text(txt,ML,y);y+=1.8;draw(PT.prim);doc.setLineWidth(0.35);doc.line(ML,y,ML+CW,y);y+=5;};
+  const para=(txt,sz=9.5,c=PT.text)=>{font("helvetica","normal",sz);col(c);const lines=doc.splitTextToSize(txt,CW);need(lines.length*sz*0.42+1);doc.text(lines,ML,y);y+=lines.length*sz*0.42+2;};
+
+  // ── Titelkopf Seite 1
+  font("helvetica","normal",8);col(PT.leise);doc.setCharSpace(0.9);doc.text("FLECHTPLAN · KONGO GUMI",ML,y);doc.setCharSpace(0);y+=9;
+  font("times","bold",21);col(PT.prim);const tl=doc.splitTextToSize(name,CW);doc.text(tl,ML,y);y+=tl.length*8.2-1;
+  font("times","normal",12);col(PT.leise);doc.text(`${n} Fäden · runde Scheibe mit 32 Schlitzen`,ML,y);y+=5;
+  draw(PT.prim);doc.setLineWidth(0.7);doc.line(ML,y,ML+CW,y);y+=5;
+  // Metablock
+  const cnt={};S.col.forEach(c=>cnt[c]=(cnt[c]||0)+1);
+  const meta=[["Druckdatum",date],["Fäden",`${n} (${Object.keys(cnt).length} Farben: ${Object.keys(cnt).map(Number).sort((a,b)=>a-b).map(c=>`${S.names[c]} ${cnt[c]}`).join(", ")})`],
+    ["Rapport",`Muster wiederholt sich alle ${patternPeriod()} Schritte`],["Zählung",S.cw?"Schlitznummern im Uhrzeigersinn":"Schlitznummern gegen den Uhrzeigersinn"],
+    ["Mitwirkung","Claude (Anthropic) - Rechenmodell und Planer"]];
+  draw(PT.linie);doc.setLineWidth(0.15);doc.line(ML,y,ML+CW,y);y+=4.5;
+  meta.forEach(([k,v])=>{font("helvetica","normal",7);col(PT.leise);doc.setCharSpace(0.3);doc.text(k.toUpperCase(),ML,y);doc.setCharSpace(0);font("helvetica","normal",9);col(PT.text);doc.text(doc.splitTextToSize(v,CW-30)[0],ML+30,y);y+=4.6;});
+  y-=1;doc.line(ML,y,ML+CW,y);y+=4;
+
+  // ── 1 Aufbau
+  h2("1  Aufbau");
+  // disk diagram
+  const R=30,cx=ML+R+10,cy=y+R+8;
+  draw(PT.linie);doc.setLineWidth(0.3);doc.circle(cx,cy,R,"S");doc.circle(cx,cy,5,"S");
+  for(let i=0;i<SL;i++){const a=(i+.5)*DEG*Math.PI/180+Math.PI*0;const [x1,y1]=[cx+R*Math.sin(i*DEG*Math.PI/180),cy-R*Math.cos(i*DEG*Math.PI/180)],[x2,y2]=[cx+(R-4)*Math.sin(i*DEG*Math.PI/180),cy-(R-4)*Math.cos(i*DEG*Math.PI/180)];doc.line(x1,y1,x2,y2);}
+  font("helvetica","normal",6);col(PT.leise);
+  for(let i=0;i<SL;i++){const a=(i+.5)*DEG*Math.PI/180;doc.text(String(label(i)),cx+(R+3.6)*Math.sin(a),cy-(R+3.6)*Math.cos(a)+0.9,{align:"center"});}
+  for(let s=0;s<n;s++){const a=(sim.init[s]+.5)*DEG*Math.PI/180,px=cx+(R-7.5)*Math.sin(a),py=cy-(R-7.5)*Math.cos(a);draw(PT.linie);doc.setLineWidth(0.2);doc.line(cx+5*Math.sin(a),cy-5*Math.cos(a),px,py);chipAt(px,py,colOf(s),1.9);}
+  fill(PT.prim);doc.triangle(cx-2,cy-R-7.6,cx+2,cy-R-7.6,cx,cy-R-5.2,"F");
+  font("helvetica","normal",7);col(PT.leise);doc.text("oben",cx,cy-R-8.6,{align:"center"});
+  // pattern matrix preview
+  const T=edTable(n),rows=8,cell=Math.min(5.2,(CW-(2*R+26))/G),mx=ML+2*R+26,my=y+6;
+  font("helvetica","bold",8.5);col(PT.zweit);doc.text("Musterbild (Matrix)",mx,my-1.5);
+  for(let i=0;i<rows;i++)for(let c=0;c<G;c++){const hex=S.pal[S.col[T[mod(rows-1-i,4)][c]]];fill(hex);draw("#ffffff");doc.setLineWidth(0.3);doc.rect(mx+c*cell,my+i*cell,cell,cell,"FD");}
+  draw(PT.linie);doc.setLineWidth(0.2);doc.rect(mx,my,G*cell,rows*cell,"S");
+  font("helvetica","normal",7.5);col(PT.leise);
+  const capL=doc.splitTextToSize(`Spalte = Stich rundum, Zeile = halbe Runde (${G/2} Schritte), oben = später geflochten. Senkrechte Streifen laufen auf der Kordel als Spiralen.`,ML+CW-mx);
+  doc.text(capL,mx,my+rows*cell+4);
+  y=Math.max(cy+R+11,my+rows*cell+6+capL.length*3.2);
+  // setup table
+  need(10);
+  const colsX=[ML,ML+18,ML+42,ML+90,ML+114];
+  font("helvetica","bold",8);col(PT.leise);["Paar","Schlitz","Farbe","Schlitz","Farbe"].forEach((t,i)=>doc.text(t,colsX[i],y));y+=1.6;draw(PT.prim);doc.setLineWidth(0.3);doc.line(ML,y,ML+CW,y);y+=4.2;
+  for(let g=0;g<G;g++){
+    need(6.5);const a=2*g,b=2*g+1;
+    if(g%2){fill(PT.zebra);doc.rect(ML,y-4,CW,6,"F");}
+    font("helvetica","normal",9.5);col(PT.text);
+    doc.text(String(g+1),colsX[0],y);doc.text(String(label(sim.init[a])),colsX[1],y);chipAt(colsX[2]+1.5,y-1.1,colOf(a));doc.text(nameOf(a),colsX[2]+5,y);
+    doc.text(String(label(sim.init[b])),colsX[3],y);chipAt(colsX[4]+1.5,y-1.1,colOf(b));doc.text(nameOf(b),colsX[4]+5,y);
+    y+=6;
+  }
+  draw(PT.linie);doc.setLineWidth(0.15);doc.line(ML,y-4,ML+CW,y-4);y+=1;
+  para("Die Fäden liegen paarweise links und rechts neben den Markierungen. Ein gleichfarbiges Fadenpaar in gegenüberliegenden Schlitzen kann aus einem doppelt langen Faden bestehen, der über das Loch gefaltet wird.",8.5,PT.leise);
+
+  // ── 2 Flechtplan
+  doc.addPage();y=MT+4;
+  h2("2  Flechtplan");
+  para(`Jeder Schritt: Den Faden oben rechts nach unten rechts legen, den Faden unten links nach oben links legen, dann die Scheibe gegen den Uhrzeigersinn drehen, bis das nächste Paar oben liegt. Eine Runde hat ${G} Schritte. Danach geht es genauso weiter; die Paare wandern dabei pro Runde um zwei Schlitze. Das Muster wiederholt sich alle ${patternPeriod()} Schritte.`);
+  y+=1;
+  const fx=[ML,ML+16,ML+36,ML+96];
+  font("helvetica","bold",8);col(PT.leise);["Schritt","Oben","Oben rechts nach unten","Unten links nach oben"].forEach((t,i)=>doc.text(t,fx[i],y));y+=1.6;draw(PT.prim);doc.setLineWidth(0.3);doc.line(ML,y,ML+CW,y);y+=4.4;
+  for(let k=0;k<2*G;k++){
+    need(6.4);const m=sim.moves[k];
+    if(k===G){draw(PT.linie);doc.setLineWidth(0.3);doc.line(ML,y-4.2,ML+CW,y-4.2);font("helvetica","italic",7.5);col(PT.leise);doc.text("Runde 2",ML+CW,y-5,{align:"right"});}
+    if(k%2){fill(PT.zebra);doc.rect(ML,y-4,CW,6,"F");}
+    font("helvetica","normal",9.5);col(PT.text);
+    doc.text(String(k+1),fx[0],y);doc.text(`${label(m.top[0])} · ${label(m.top[1])}`,fx[1],y);
+    for(const [x0,mv] of [[fx[2],m.down],[fx[3],m.up]]){chipAt(x0+1.5,y-1.1,colOf(mv.s));col(PT.text);font("helvetica","normal",9.5);doc.text(String(label(mv.from)),x0+5,y);arrow(x0+11.5,x0+19,y-1.1);doc.text(String(label(mv.to)),x0+21,y);font("helvetica","normal",7.5);col(PT.leise);doc.text(nameOf(mv.s),x0+29,y);}
+    y+=6;
+  }
+  draw(PT.linie);doc.setLineWidth(0.15);doc.line(ML,y-4,ML+CW,y-4);y+=2;
+
+  // ── 3 Fadenbedarf
+  const L=+$("inLen").value||0,fac=+$("inFac").value||1,add=+$("inAdd").value||0,per=L*fac+add,fold={};
+  for(let s=0;s<n/2;s++)if(S.col[s]===S.col[s+n/2])fold[S.col[s]]=(fold[S.col[s]]||0)+1;
+  need(60);h2("3  Fadenbedarf");
+  para(`Fertige Länge ${L} cm · Einarbeitungsfaktor ${String(fac).replace(".",",")} · Zugabe ${add} cm je Strang. Länge je Strang = Länge × Faktor + Zugabe.`);
+  y+=1;
+  const mx2=[ML,ML+44,ML+68,ML+104,ML+134];
+  font("helvetica","bold",8);col(PT.leise);["Farbe","Stränge","Länge je Strang","Gesamt","Gefaltet möglich"].forEach((t,i)=>doc.text(t,mx2[i],y));y+=1.6;draw(PT.prim);doc.setLineWidth(0.3);doc.line(ML,y,ML+CW,y);y+=4.4;
+  let tot=0;
+  Object.keys(cnt).map(Number).sort((a,b)=>a-b).forEach((c,i)=>{
+    need(6.4);const t=cnt[c]*per;tot+=t;
+    if(i%2){fill(PT.zebra);doc.rect(ML,y-4,CW,6,"F");}
+    chipAt(mx2[0]+1.5,y-1.1,S.pal[c]);font("helvetica","normal",9.5);col(PT.text);doc.text(S.names[c],mx2[0]+5,y);
+    doc.text(String(cnt[c]),mx2[1],y);doc.text(fmt(per),mx2[2],y);doc.text(fmt(t),mx2[3],y);doc.text(fold[c]?`${fold[c]} × ${fmt(2*per)}`:"-",mx2[4],y);y+=6;
+  });
+  draw(PT.prim);doc.setLineWidth(0.3);doc.line(ML,y-4.2,ML+CW,y-4.2);
+  font("helvetica","bold",9.5);col(PT.text);doc.text("Summe",mx2[0]+5,y);doc.text(String(n),mx2[1],y);doc.text(fmt(tot),mx2[3],y);y+=7;
+  para("Der Einarbeitungsfaktor hängt von Garn, Gewicht und Zug ab. Am genauesten: 10 cm zur Probe flechten und den verbrauchten Faden messen.",8.5,PT.leise);
+
+  // ── Kopf- und Fußzeilen (ab Seite 2)
+  const pages=doc.getNumberOfPages();
+  for(let p=2;p<=pages;p++){
+    doc.setPage(p);
+    font("helvetica","normal",8);col(PT.leise);
+    doc.text(doc.splitTextToSize(name,CW-50)[0],ML,MT-8);doc.text(`Kumihimo-Planer  ·  ${date}`,W-MR,MT-8,{align:"right"});
+    draw(PT.linie);doc.setLineWidth(0.15);doc.line(ML,MT-6,W-MR,MT-6);
+    font("helvetica","normal",7.5);doc.text("Daniel Ertl",ML,H-10);
+    font("helvetica","italic",7.5);doc.text(URHEBER,W/2,H-10,{align:"center"});
+    font("helvetica","normal",7.5);doc.text(`Seite ${p} von ${pages}`,W-MR,H-10,{align:"right"});
+  }
+  doc.setProperties({title:`Flechtplan ${name}`,subject:"Kongo Gumi, 32er-Scheibe",creator:"Kumihimo-Planer"});
+  return {doc,name};
+}
+$("bPdf").onclick=async()=>{
+  const btn=$("bPdf"),pm=t=>{$("pdfMsg").textContent=t;};
+  btn.disabled=true;pm("PDF wird erstellt …");
+  try{
+    const lib=await loadJsPdf();
+    const {doc,name}=buildPdf(lib.jsPDF);
+    const fname="Flechtplan-"+slug(name)+".pdf",blob=doc.output("blob");
+    if(DL){
+      try{await DL.save({filename:fname,data:blob});pm("PDF gespeichert.");}
+      catch(e){const c=e&&e.code;pm(c==="declined"?"Speichern abgebrochen.":c==="rate_limited"?"Es ist schon ein Speicherdialog offen.":"Das PDF ließ sich hier nicht speichern.");}
+    }else if(!window.claude){
+      const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);
+      pm(`„${fname}“ erstellt.`);
+    }else pm("Dateien lassen sich in dieser Ansicht nicht speichern.");
+  }catch(e){pm("Die PDF-Bibliothek konnte nicht geladen werden. Für den Export ist eine Internetverbindung nötig.");}
+  finally{btn.disabled=false;}
+};
+
+/* ---------- eckige Platte (Flachband) ---------- */
+const QSTRUCTS={
+  flach8:{
+    name:"Flachband, 8 Fäden",
+    source:'Züge nach Fire Mountain Gems, <a href="https://www.firemountaingems.com/learn/categories/essential-resources/how-tos/D18S-project-tutorial.html" target="_blank" rel="noopener">„Using the Kumihimo Plate to Create Flat Braids“</a> (dort Schritte 5 bis 18).',
+    setup:["T4","T5","T8","T9","B5","B6","B7","B8"],
+    moves:[["B6","T6"],["B7","T7"],["T5","B6"],["T8","B7"],["B5","T5"],["B8","T8"],["B6","B5",1],["B7","B8",1],["T4","B7"],["T9","B6"],["T5","T4",1],["T6","T5",1],["T8","T9",1],["T7","T8",1]],
+    faces:["T","B"],
+    presets:[
+      ["Oben / unten",[0,0,0,0,1,1,1,1]],
+      ["Abwechselnd",[0,1,1,0,1,0,0,1]],
+      ["Außen / innen",[0,1,1,0,0,1,1,0]],
+      ["Einfarbig",[0,0,0,0,0,0,0,0]]
+    ]
+  }
+};
+QSTRUCTS.vierkant8={
+    name:"Vierkant, 8 Fäden",
+    source:'Züge nach Fire Mountain Gems, <a href="https://www.firemountaingems.com/learn/categories/essential-resources/how-tos/C89L-project-tutorial.html" target="_blank" rel="noopener">„Using the Kumihimo Square Plate to Create Square Braids“</a>. Seitenbuchstaben A–H von oben nach unten.',
+    setup:["T5","T8","B6","B7","RB","RC","LA","LD"],
+    moves:[["B6","T6"],["B7","T7"],["T5","B6"],["T8","B7"],["T6","T5",1],["T7","T8",1],["RB","LB"],["RC","LC"],["LA","RB"],["LD","RC"],["LB","LA",1],["LC","LD",1]],
+    faces:["T","R","B","L"],
+    presets:[
+      ["Oben-unten / seitlich",[0,0,0,0,1,1,1,1]],
+      ["Über Kreuz",[0,1,1,0,0,1,1,0]],
+      ["Einfarbig",[0,0,0,0,0,0,0,0]]
+    ]
+};
+const Q={struct:"flach8",col:null,step:0,hover:-1};
+const QCYC=12;
+let QSIM=null;
+const qParse=id=>({side:id[0],i:/[A-H]/.test(id[1])?id.charCodeAt(1)-64:+id.slice(1)});
+const qSideName={T:"Oben",B:"Unten",L:"Links",R:"Rechts"};
+const qLabel=id=>{const p=qParse(id);return `${qSideName[p.side]} ${p.side==="L"||p.side==="R"?String.fromCharCode(64+p.i):p.i}`;};
+function qPos(id,inset){
+  const p=qParse(id),d=inset==null?112:inset;
+  if(p.side==="T")return [-110+(p.i-1)*20,-d];
+  if(p.side==="B")return [-110+(p.i-1)*20,d];
+  if(p.side==="L")return [-d,-70+(p.i-1)*20];
+  return [d,-70+(p.i-1)*20];
+}
+function qSimulate(st,cycles){
+  const occ={};st.setup.forEach((id,s)=>occ[id]=s);
+  const snaps=[{...occ}],steps=[],stitches=[],cycleOcc=[{...occ}];
+  let k=0;
+  for(let c=0;c<cycles;c++){
+    st.moves.forEach(([from,to,reset],m)=>{
+      const s=occ[from];
+      if(s===undefined||occ[to]!==undefined)throw new Error(`Zug ${m+1}: ${from} → ${to} passt nicht`);
+      delete occ[from];occ[to]=s;
+      steps.push({k,c,m,from,to,reset:!!reset,s});
+      if(!reset){const a=qParse(from),b=qParse(to);stitches.push({c,order:m,face:b.side,x:b.i,dir:Math.sign(b.i-a.i),s,k});}
+      snaps.push({...occ});k++;
+    });
+    cycleOcc.push({...occ});
+  }
+  // Rapport: after how many passes do the colours sit in the same slots again?
+  return {steps,stitches,snaps,cycleOcc};
+}
+function qPeriod(){
+  const st=QSTRUCTS[Q.struct],c0=st.setup.map(id=>Q.col[QSIM.cycleOcc[0][id]]).join();
+  for(let c=1;c<QSIM.cycleOcc.length;c++){if(st.setup.map(id=>Q.col[QSIM.cycleOcc[c][id]]).join()===c0)return c;}
+  return null;
+}
+function qSave(){try{localStorage.setItem("kumihimo-eckig",JSON.stringify({struct:Q.struct,col:Q.col}));}catch(e){}}
+function qLoad(){
+  try{const d=JSON.parse(localStorage.getItem("kumihimo-eckig")||"null");
+    if(d&&QSTRUCTS[d.struct]&&Array.isArray(d.col)&&d.col.length===QSTRUCTS[d.struct].setup.length&&d.col.every(v=>v>=0&&v<6)){Q.struct=d.struct;Q.col=d.col;}}catch(e){}
+  if(!Q.col)Q.col=QSTRUCTS[Q.struct].presets[0][1].slice();
+}
+function qRebuild(){QSIM=qSimulate(QSTRUCTS[Q.struct],QCYC);}
+
+/* toolbar */
+function qRenderToolbar(){
+  const seg=$("qStruct");seg.innerHTML="";
+  Object.entries(QSTRUCTS).forEach(([key,st])=>{const b=document.createElement("button");b.type="button";b.textContent=st.name;b.setAttribute("aria-pressed",String(key===Q.struct));b.onclick=()=>{if(Q.struct===key)return;Q.struct=key;Q.col=st.presets[0][1].slice();Q.step=0;qRebuild();qeFromPlan();qRender();};seg.appendChild(b);});
+  const el=$("qSwatches");el.innerHTML="";
+  S.pal.forEach((c,i)=>{const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=c;b.title=S.names[i];b.setAttribute("aria-label","Farbe "+S.names[i]);b.setAttribute("aria-pressed",String(i===S.brush));b.onclick=()=>{S.brush=i;qRenderToolbar();renderSwatches();};el.appendChild(b);});
+  $("qColorIn").value=S.pal[S.brush];$("qBrushName").textContent=S.names[S.brush];
+  const pr=$("qPresets");pr.innerHTML="";
+  const stc=QSTRUCTS[Q.struct];
+  stc.presets.forEach(([name,cols])=>{
+    const t=document.createElement("button");t.type="button";t.className="tile qtile";t.setAttribute("aria-label",name+" laden");
+    const rows={};stc.setup.forEach((id,s)=>{(rows[id[0]]=rows[id[0]]||[]).push(`<i style="background:${S.pal[cols[s]]}"></i>`);});
+    t.innerHTML=`<div class="chiprows">${Object.entries(rows).map(([side,ch])=>`<div><small>${qSideName[side]}</small>${ch.join("")}</div>`).join("")}</div><b></b>`;
+    t.querySelector("b").textContent=name;
+    t.onclick=()=>{Q.col=cols.slice();Q.step=0;qeFromPlan();qRender();showSub("eckig","editor");};
+    pr.appendChild(t);
+  });
+  $("qStructNote").innerHTML=`${stc.setup.length} Fäden, ${stc.moves.length} Züge je Durchgang. ${stc.source}`;
+}
+$("qColorIn").addEventListener("input",e=>{S.pal[S.brush]=e.target.value;S.names[S.brush]="Farbe "+(S.brush+1);qRender();save();});
+
+/* plate */
+const qSvg=$("qPlate");
+function qEl(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function qRenderPlate(){
+  const st=QSTRUCTS[Q.struct];
+  qSvg.innerHTML="";
+  const defs=qEl("defs",{},qSvg),mk=qEl("marker",{id:"qah",viewBox:"0 0 10 10",refX:"8",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},defs);
+  qEl("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--hi)"},mk);
+  qEl("rect",{x:-130,y:-130,width:260,height:260,rx:12,fill:"var(--disk)",stroke:"var(--disk-edge)","stroke-width":1.5},qSvg);
+  qEl("circle",{cx:0,cy:0,r:14,fill:"var(--bg)",stroke:"var(--disk-edge)","stroke-width":1.5},qSvg);
+  const lab=(x,y,t)=>{const e=qEl("text",{x,y,"text-anchor":"middle","dominant-baseline":"central","font-family":"IBM Plex Mono, monospace","font-size":10,fill:"var(--muted)"},qSvg);e.textContent=t;};
+  for(let i=1;i<=12;i++){const x=-110+(i-1)*20;
+    qEl("line",{x1:x,y1:-130,x2:x,y2:-120,stroke:"var(--disk-edge)","stroke-width":2,"stroke-linecap":"round"},qSvg);
+    qEl("line",{x1:x,y1:130,x2:x,y2:120,stroke:"var(--disk-edge)","stroke-width":2,"stroke-linecap":"round"},qSvg);
+    lab(x,-142,i);lab(x,143,i);}
+  for(let j=1;j<=8;j++){const y=-70+(j-1)*20,L=String.fromCharCode(64+j);
+    qEl("line",{x1:-130,y1:y,x2:-120,y2:y,stroke:"var(--disk-edge)","stroke-width":2,"stroke-linecap":"round"},qSvg);
+    qEl("line",{x1:130,y1:y,x2:120,y2:y,stroke:"var(--disk-edge)","stroke-width":2,"stroke-linecap":"round"},qSvg);
+    lab(-143,y,L);lab(143,y,L);}
+  const snap=QSIM.snaps[Q.step],mv=QSIM.steps[Q.step];
+  const thr=qEl("g",{},qSvg),arr=qEl("g",{},qSvg),dots=qEl("g",{},qSvg);
+  Object.entries(snap).forEach(([id,s])=>{
+    const [x,y]=qPos(id),hex=S.pal[Q.col[s]],a=Math.atan2(y,x);
+    qEl("line",{x1:14*Math.cos(a),y1:14*Math.sin(a),x2:x,y2:y,stroke:hex,"stroke-width":2.2,opacity:.9},thr);
+    const d=qEl("circle",{cx:x,cy:y,r:7.5,fill:hex,stroke:Q.hover===s?"var(--hi)":mix(hex,"#000000",.45),"stroke-width":Q.hover===s?3.2:1.4,"aria-label":`Faden in ${qLabel(id)}, ${S.names[Q.col[s]]}`},dots);
+    d.addEventListener("pointerenter",()=>qHover(s));d.addEventListener("pointerleave",()=>qHover(-1));
+  });
+  if(mv){
+    const [x1,y1]=qPos(mv.from),[x2,y2]=qPos(mv.to,mv.reset?112:100);
+    const cx=mv.reset?(x1+x2)/2*0.72:(x1+x2)*0.12, cy=mv.reset?(y1+y2)/2*0.72:(y1+y2)*0.12;
+    qEl("path",{d:`M${x1},${y1} Q${cx},${cy} ${x2},${y2}`,fill:"none",stroke:"var(--hi)","stroke-width":2.6,"stroke-dasharray":mv.reset?"2 4":"6 4","marker-end":"url(#qah)"},arr);
+    qEl("circle",{cx:x1,cy:y1,r:12,fill:"none",stroke:"var(--hi)","stroke-width":2},arr);
+  }
+  $("qInfo").textContent=`${st.setup.length} Fäden · ${st.moves.length} Züge je Durchgang`;
+  const n=st.moves.length;
+  $("qStepCount").textContent=Q.step===0?"Aufbau":`Zug ${Q.step%n+1} · Durchgang ${Math.floor(Q.step/n)+1}`;
+  $("qPrev").disabled=Q.step===0;
+  if(mv){
+    const hex=S.pal[Q.col[mv.s]];
+    $("qStepText").innerHTML=`<b>Zug ${mv.m+1} von ${n}</b> <span class="note">(Durchgang ${mv.c+1})</span><br>${chip(hex)}${S.names[Q.col[mv.s]]}: von <b>${qLabel(mv.from)}</b> nach <b>${qLabel(mv.to)}</b>.<br>`+
+      (mv.reset?`Nur zurücksetzen: Der Faden rückt auf derselben Seite nach, das legt keinen Stich.`:`Der Faden wandert quer über die Platte und legt einen Stich auf die Bandseite ${mv.to[0]==="T"?"oben":mv.to[0]==="B"?"unten":mv.to[0]==="L"?"links":"rechts"}.`);
+  }
+}
+function qGo(k){k=Math.max(0,Math.min(QSIM.steps.length-1,k));Q.step=k;qRenderPlate();qMarkRow();}
+$("qNext").onclick=()=>qGo(Q.step+1);$("qPrev").onclick=()=>qGo(Q.step-1);$("qReset").onclick=()=>qGo(0);
+function qHover(s){if(s===Q.hover)return;Q.hover=s;qRenderPlate();qRenderFaces();}
+
+/* band faces (schematic) */
+function qRenderFaces(){
+  const period=qPeriod();
+  const faces=QSTRUCTS[Q.struct].faces,box0=$("qFaces");
+  if(box0.dataset.faces!==faces.join()){
+    box0.dataset.faces=faces.join();box0.style.gridTemplateColumns=`repeat(${faces.length},1fr)`;
+    box0.innerHTML=faces.map(f=>`<div><canvas id="qFace${f}" aria-label="Seite ${qSideName[f].toLowerCase()}"></canvas><span class="facecap">Seite ${qSideName[f].toLowerCase()}</span></div>`).join("");
+  }
+  for(const face of faces){
+    const cv=$("qFace"+face),box=cv.parentElement,W=Math.max(60,Math.min(220,box.clientWidth));
+    const sts=QSIM.stitches.filter(t=>t.face===face);
+    if(W<40)continue;
+    const xs=[...new Set(sts.map(t=>t.x))].sort((a,b)=>a-b);
+    const perCycle={};let rpc=1;
+    const placed=sts.map(t=>{const key=t.c+":"+t.x;const sub=perCycle[key]=(perCycle[key]||0)+1;rpc=Math.max(rpc,sub);return {...t,sub:sub-1};});
+    const cw=Math.min(34,W/xs.length),rowH=cw*0.9,H=Math.round(Math.min(380,rowH*rpc*QCYC));
+    const ctx=sizeCanvas(cv,W,H),ox=(W-cw*xs.length)/2;
+    ctx.fillStyle=getCss("--gap")||"#222";ctx.fillRect(ox-4,0,cw*xs.length+8,H);
+    for(const t of placed){
+      const row=t.c*rpc+t.sub, cy=H-(row+.5)*rowH, cx=ox+(xs.indexOf(t.x)+.5)*cw;
+      if(cy<-rowH)continue;
+      drawStitch(ctx,cx,cy,t.dir*cw*0.28,rowH*1.05,cw*0.36,S.pal[Q.col[t.s]],Q.hover===t.s);
+    }
+  }
+  const n=QSTRUCTS[Q.struct].setup.length;
+  $("qFaceInfo").innerHTML=(period?`Das Farbbild wiederholt sich nach ${period} ${period===1?"Durchgang":"Durchgängen"}. `:`Das Farbbild wiederholt sich nicht innerhalb von ${QCYC} Durchgängen. `)+"Neueste Stiche oben. Jeder Zug quer über die Platte legt einen Stich auf die Seite, zu der der Faden wandert.";
+}
+
+/* plan, setup, material */
+function qRenderPlan(){
+  const st=QSTRUCTS[Q.struct],n=st.moves.length;let h="";
+  QSIM.steps.slice(0,2*n).forEach(mv=>{
+    const hex=S.pal[Q.col[mv.s]];
+    h+=`<tr data-k="${mv.k}" class="${mv.m===0&&mv.c>0?"round":""}"><td class="num">${mv.c+1}.${mv.m+1}</td><td>${chip(hex)}${S.names[Q.col[mv.s]]}</td><td>${qLabel(mv.from)}</td><td>${qLabel(mv.to)}</td><td class="note">${mv.reset?"zurücksetzen":""}</td></tr>`;
+  });
+  $("qPlanBody").innerHTML=h;
+  $("qPlanBody").querySelectorAll("tr").forEach(r=>r.onclick=()=>{qGo(+r.dataset.k);$("qStudio").scrollIntoView({behavior:RM?"auto":"smooth"});});
+  qMarkRow();
+  const period=qPeriod();
+  $("qPlanNote").textContent=`Ein Durchgang hat ${n} Züge, davon ${st.moves.filter(m=>!m[2]).length} quer über die Platte und ${st.moves.filter(m=>m[2]).length} zum Zurücksetzen. Danach sind alle Schlitze wieder wie beim Aufbau belegt, aber mit anderen Fäden.`+(period===1?` Bei diesem Aufbau liegen die Farben nach jedem Durchgang wieder gleich.`:period?` Deshalb wechseln die Farben der wandernden Fäden; nach ${period} Durchgängen liegen sie wieder wie am Anfang.`:` Die Farben wiederholen sich innerhalb von ${QCYC} Durchgängen nicht.`);
+  let s2="";st.setup.forEach((id,s)=>{s2+=`<div><span class="num">${qLabel(id)}</span>${chip(S.pal[Q.col[s]])}${S.names[Q.col[s]]}</div>`;});
+  $("qSetup").innerHTML=s2;
+  const cnt={};Q.col.forEach(c=>cnt[c]=(cnt[c]||0)+1);
+  $("qFacts").innerHTML=`<span>Fäden <b>${st.setup.length}</b></span><span>Farben <b>${Object.keys(cnt).length}</b></span><span>Rapport <b>${period||"–"}</b> ${period===1?"Durchgang":"Durchgänge"}</span>`;
+  $("qSource").innerHTML=st.source;
+}
+function qMarkRow(){document.querySelectorAll("#qPlanBody tr").forEach(r=>r.classList.toggle("cur",+r.dataset.k===Q.step));}
+function qRenderMaterial(){
+  const L=+$("qLen").value||0,f=+$("qFac").value||1,a=+$("qAdd").value||0,per=L*f+a,cnt={};
+  Q.col.forEach(c=>cnt[c]=(cnt[c]||0)+1);let h="",tot=0;
+  Object.keys(cnt).map(Number).sort((x,y)=>x-y).forEach(c=>{const t=cnt[c]*per;tot+=t;h+=`<tr><td>${chip(S.pal[c])}${S.names[c]}</td><td class="num">${cnt[c]}</td><td class="num">${fmt(per)}</td><td class="num">${fmt(t)}</td></tr>`;});
+  h+=`<tr><td><b>Summe</b></td><td class="num">${Q.col.length}</td><td></td><td class="num"><b>${fmt(tot)}</b></td></tr>`;
+  $("qMatBody").innerHTML=h;
+}
+["qLen","qFac","qAdd"].forEach(id=>$(id).addEventListener("input",qRenderMaterial));
+function qRender(){if($("tab-eckig").hidden)return;cssCache={};qRenderToolbar();qRenderOwn();qRenderPlate();qRenderFaces();qRenderPlan();qRenderMaterial();qeRender(false);qSave();}
+new ResizeObserver(()=>{if(!$("tab-eckig").hidden)qRenderFaces();}).observe($("qStudio"));
+new ResizeObserver(()=>{if(!$("tab-eckig").hidden)qeRender(false);}).observe($("qEditor"));
+
+/* ---------- Muster-Editor eckige Platte ---------- */
+const QE={key:null,R:6,cells:null,tool:"pen",mode:"free",hover:null,fit:null,painting:false,last:null,map:null};
+function qeBuildMap(){
+  const st=QSTRUCTS[Q.struct],faces=st.faces,m={};
+  for(const f of faces){
+    const sts=QSIM.stitches.filter(t=>t.face===f),xs=[...new Set(sts.map(t=>t.x))].sort((a,b)=>a-b);
+    const cnt={};let rpc=1;const look={};
+    for(const t of sts){const k=t.c+":"+t.x;const sub=cnt[k]=(cnt[k]||0)+1;rpc=Math.max(rpc,sub);look[t.c+":"+(sub-1)+":"+xs.indexOf(t.x)]=t;}
+    m[f]={xs,rpc,look};
+  }
+  QE.map=m;QE.maxRpc=Math.max(...faces.map(f=>m[f].rpc));
+}
+function qeRowsOf(f){return QE.R*QE.map[f].rpc;}
+function qeStitch(f,i,c){const F=QE.map[f],rb=qeRowsOf(f)-1-i,cy=Math.floor(rb/F.rpc),sub=rb%F.rpc;return F.look[cy+":"+sub+":"+c];}
+const qeStrand=(f,i,c)=>{const t=qeStitch(f,i,c);return t?t.s:-1;};
+function qeFromPlan(){
+  qeBuildMap();QE.key=Q.struct;QE.cells={};
+  for(const f of QSTRUCTS[Q.struct].faces){QE.cells[f]=Array.from({length:qeRowsOf(f)},(_,i)=>QE.map[f].xs.map((_,c)=>{const s=qeStrand(f,i,c);return s<0?-1:Q.col[s];}));}
+}
+function qeResize(R){
+  const old=QE.cells,oldR=QE.R;QE.R=R;
+  for(const f of QSTRUCTS[Q.struct].faces){
+    const rpc=QE.map[f].rpc,o=old[f],oR=oldR*rpc,nR=R*rpc,per=QE.map[f].rpc;
+    QE.cells[f]=Array.from({length:nR},(_,i)=>{let rb=nR-1-i;const period=Math.max(per,1);while(rb>=oR)rb-=period*Math.max(1,Math.min(oldR,2));return rb>=0&&o[oR-1-rb]?o[oR-1-rb].slice():QE.map[f].xs.map(()=>-1);});
+  }
+}
+function qeSolve(){
+  const n=QSTRUCTS[Q.struct].setup.length,votes=Array.from({length:n},()=>({})),freq={};let total=0;
+  for(const f of QSTRUCTS[Q.struct].faces)QE.cells[f].forEach((row,i)=>row.forEach((v,c)=>{if(v<0)return;const s=qeStrand(f,i,c);if(s<0)return;votes[s][v]=(votes[s][v]||0)+1;freq[v]=(freq[v]||0)+1;total++;}));
+  const top=Object.keys(freq).map(Number).sort((a,b)=>freq[b]-freq[a]);
+  const col=new Array(n);let free=0;
+  for(let s=0;s<n;s++){const ks=Object.keys(votes[s]).map(Number);if(!ks.length){col[s]=top.length?top[0]:Q.col[s];free++;continue;}ks.sort((a,b)=>(votes[s][b]-votes[s][a])||(freq[b]-freq[a]));col[s]=ks[0];}
+  let miss=0;for(const f of QSTRUCTS[Q.struct].faces)QE.cells[f].forEach((row,i)=>row.forEach((v,c)=>{const s=qeStrand(f,i,c);if(v>=0&&s>=0&&v!==col[s])miss++;}));
+  QE.fit={col,miss,total,free};
+}
+function qeGeom(cv){
+  const faces=QSTRUCTS[Q.struct].faces,W=Math.max(160,cv.parentElement.clientWidth-28),gap=18,top=18;
+  const cols=faces.reduce((a,f)=>a+QE.map[f].xs.length,0);
+  const cw=Math.floor(Math.min(40,(W-gap*(faces.length-1))/cols,Math.max(14,520/(QE.R*QE.maxRpc)*QE.maxRpc/1.2)));
+  const cycleH=Math.round(cw*1.2);
+  const totalW=cols*cw+gap*(faces.length-1);let x=Math.floor((W-totalW)/2);const boxes={};
+  for(const f of faces){const nc=QE.map[f].xs.length,rh=cycleH/QE.map[f].rpc;boxes[f]={x,cw,rh,nc,nr:qeRowsOf(f)};x+=nc*cw+gap;}
+  return {W,H:top+cycleH*QE.R+4,top,boxes,faces};
+}
+function qeDraw(cv,getColor,marks){
+  const g=qeGeom(cv),ctx=sizeCanvas(cv,g.W,g.H);ctx.clearRect(0,0,g.W,g.H);
+  const hp=hatchPattern(ctx),hs=QE.hover?qeStrand(...QE.hover):-1;
+  ctx.font="600 10px 'IBM Plex Sans', system-ui, sans-serif";ctx.textAlign="center";
+  for(const f of g.faces){
+    const b=g.boxes[f];
+    ctx.fillStyle=getCss("--muted");ctx.fillText(qSideName[f].toUpperCase(),b.x+b.nc*b.cw/2,11);
+    for(let i=0;i<b.nr;i++)for(let c=0;c<b.nc;c++){
+      const gap=Math.max(1.5,b.cw*.07),x=b.x+c*b.cw+gap/2,y=g.top+i*b.rh+gap/2,w=b.cw-gap,h=b.rh-gap,rad=Math.min(6,w*.2,h*.3);
+      const s=qeStrand(f,i,c),v=s<0?-2:getColor(f,i,c);
+      ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,rad):ctx.rect(x,y,w,h);
+      if(v===-2){ctx.fillStyle=getCss("--bg");ctx.fill();continue;}
+      if(v<0){ctx.fillStyle=getCss("--sunk");ctx.fill();ctx.fillStyle=hp;ctx.fill();}
+      else{const hex=S.pal[v],gr=ctx.createLinearGradient(x,y,x+w,y+h);gr.addColorStop(0,mix(hex,"#ffffff",.12));gr.addColorStop(1,mix(hex,"#000000",.22));ctx.fillStyle=gr;ctx.fill();}
+      if(hs>=0&&s===hs){ctx.lineWidth=2.5;ctx.strokeStyle=getCss("--hi");ctx.stroke();}
+      if(marks&&marks(f,i,c)){ctx.beginPath();ctx.arc(x+w/2,y+h/2,Math.max(3,Math.min(w,h)*.16),0,Math.PI*2);ctx.fillStyle=getCss("--hi");ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=getCss("--surface");ctx.stroke();}
+    }
+    ctx.fillStyle=getCss("--line");
+    for(let r=1;r<QE.R;r++){const y=g.top+r*b.rh*QE.map[f].rpc;ctx.fillRect(b.x,y-0.5,b.nc*b.cw,1);}
+  }
+  return g;
+}
+function qeCellAt(cv,e){
+  const g=qeGeom(cv),r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top-g.top;
+  for(const f of g.faces){const b=g.boxes[f];if(x>=b.x&&x<b.x+b.nc*b.cw){const c=Math.floor((x-b.x)/b.cw),i=Math.floor(y/b.rh);if(i>=0&&i<b.nr&&qeStrand(f,i,c)>=0)return [f,i,c];}}
+  return null;
+}
+function qeEnsure(){if(QE.key!==Q.struct||!QE.cells){qeFromPlan();}else if(!QE.map)qeBuildMap();}
+function qeRender(save){
+  if(!QSIM)return;qeEnsure();qeSolve();
+  const f=QE.fit,st=QSTRUCTS[Q.struct];
+  qeDraw($("qeCanvas"),(fa,i,c)=>QE.cells[fa][i][c],null);
+  qeDraw($("qeResult"),(fa,i,c)=>f.col[qeStrand(fa,i,c)],(fa,i,c)=>{const v=QE.cells[fa][i][c];return v>=0&&v!==f.col[qeStrand(fa,i,c)];});
+  $("qeInfo").textContent=`${st.faces.length} Seiten · ${QE.R} Durchgänge`;
+  const pct=f.total?Math.round(100*(f.total-f.miss)/f.total):100;
+  $("qeScore").textContent=f.miss?`${f.miss} Abweichungen`:"passt genau";
+  $("qePct").textContent=f.total?`${pct} % passen`:"Noch leer";
+  $("qeMeter").style.width=pct+"%";
+  const used=[...new Set(f.col)];
+  let ex=!f.total?"Wähle oben eine Farbe und male auf die Bandseiten.":f.miss
+    ?`${f.miss} von ${f.total} gezeichneten Stichen lassen sich so nicht flechten; sie sind rechts markiert. Jeder der ${st.setup.length} Fäden hat eine feste Farbe und liefert in jedem Durchgang bestimmte Stiche. Zeig auf eine Zelle, um zu sehen, welche Stiche zum selben Faden gehören.`
+    :`Deine Zeichnung ist genau so flechtbar. Sie braucht ${used.length} ${used.length===1?"Farbe":"Farben"}.`;
+  if(f.free&&f.total)ex+=` ${f.free} ${f.free===1?"Faden war":"Fäden waren"} durch die Zeichnung nicht festgelegt und ${f.free===1?"bekommt":"bekommen"} die häufigste Farbe.`;
+  $("qeExplain").textContent=ex;
+  $("qeSetup").innerHTML=st.setup.map((id,s)=>`<div><span class="num">${qLabel(id)}</span>${chip(S.pal[f.col[s]])}${S.names[f.col[s]]}</div>`).join("");
+  const same=Q.col.every((v,s)=>v===f.col[s]);
+  $("qeApply").disabled=same;$("qeApply").textContent=same?"Liegt schon auf der Platte":"Auf die Platte übernehmen";
+  $$("#qeTool button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tool===QE.tool)));
+  $$("#qeMode button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===QE.mode)));
+  $$("#qeRows button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.r===QE.R)));
+  if(save!==false)qeSave();
+}
+function qeSave(){try{localStorage.setItem("kumihimo-eckig-editor",JSON.stringify({key:QE.key,R:QE.R,mode:QE.mode,cells:QE.cells}));}catch(e){}}
+function qeLoad(){try{const d=JSON.parse(localStorage.getItem("kumihimo-eckig-editor")||"null");if(d&&d.key===Q.struct&&d.cells){QE.key=d.key;QE.R=d.R;QE.mode=d.mode==="braid"?"braid":"free";QE.cells=d.cells;qeBuildMap();
+  for(const f of QSTRUCTS[Q.struct].faces){if(!QE.cells[f]||QE.cells[f].length!==qeRowsOf(f)){QE.cells=null;QE.key=null;return;}}}}catch(e){QE.cells=null;QE.key=null;}}
+function qeTwins(s,v){for(const f of QSTRUCTS[Q.struct].faces)QE.cells[f].forEach((row,i)=>row.forEach((_,c)=>{if(qeStrand(f,i,c)===s)row[c]=v;}));}
+function qePaint(f,i,c){
+  const v=QE.tool==="erase"?-1:S.brush,grid=QE.cells[f];
+  if(QE.tool==="fill"){
+    const from=grid[i][c];if(from===v)return;const q=[[i,c]],seen=new Set();
+    while(q.length){const [a,b]=q.pop(),k=a+":"+b;if(seen.has(k)||a<0||b<0||a>=grid.length||b>=grid[0].length||grid[a][b]!==from||qeStrand(f,a,b)<0)continue;seen.add(k);grid[a][b]=v;if(QE.mode==="braid")qeTwins(qeStrand(f,a,b),v);q.push([a-1,b],[a+1,b],[a,b-1],[a,b+1]);}
+    return;
+  }
+  grid[i][c]=v;if(QE.mode==="braid")qeTwins(qeStrand(f,i,c),v);
+}
+function qeHover(h){const k=h?h.join(","):null,o=QE.hover?QE.hover.join(","):null;if(k===o)return;QE.hover=h;qeRender(false);}
+const qeCv=$("qeCanvas"),qeRes=$("qeResult");
+qeCv.addEventListener("pointerdown",e=>{const h=qeCellAt(qeCv,e);if(!h)return;e.preventDefault();QE.painting=true;qeCv.setPointerCapture(e.pointerId);qePaint(...h);QE.last=h.join(",");qeRender(false);});
+qeCv.addEventListener("pointermove",e=>{const h=qeCellAt(qeCv,e);if(QE.painting&&h&&QE.tool!=="fill"&&h.join(",")!==QE.last){QE.last=h.join(",");qePaint(...h);QE.hover=h;qeRender(false);}else qeHover(h);});
+const qeEnd=()=>{if(QE.painting)qeSave();QE.painting=false;QE.last=null;};
+qeCv.addEventListener("pointerup",qeEnd);qeCv.addEventListener("pointercancel",qeEnd);
+qeCv.addEventListener("pointerleave",()=>{if(!QE.painting)qeHover(null);});
+qeRes.addEventListener("pointermove",e=>qeHover(qeCellAt(qeRes,e)));qeRes.addEventListener("pointerleave",()=>qeHover(null));
+$("qeTool").addEventListener("click",e=>{const b=e.target.closest("button");if(b){QE.tool=b.dataset.tool;qeRender();}});
+$("qeMode").addEventListener("click",e=>{const b=e.target.closest("button");if(b){QE.mode=b.dataset.mode;qeRender();}});
+$("qeRows").addEventListener("click",e=>{const b=e.target.closest("button");if(b){qeResize(+b.dataset.r);qeRender();}});
+$("qeFromPlan").onclick=()=>{qeFromPlan();qeRender();};
+$("qeClear").onclick=()=>{for(const f in QE.cells)QE.cells[f]=QE.cells[f].map(r=>r.map(()=>-1));qeRender();};
+$("qeApply").onclick=()=>{Q.col=QE.fit.col.slice();Q.step=0;qRender();showSub("eckig","anleitung");};
+
+/* ---------- eckig: speichern, laden, PDF ---------- */
+let QOWN=[],qArmed=null;
+function qSetName(n){$("qSaveName").value=n;$("qPdfName").value=n;try{localStorage.setItem("kumihimo-eckig-name",n);}catch(e){}}
+$("qSaveName").addEventListener("input",e=>{$("qPdfName").value=e.target.value;});
+$("qPdfName").addEventListener("input",e=>{$("qSaveName").value=e.target.value;});
+try{const nm=localStorage.getItem("kumihimo-eckig-name");if(nm){$("qSaveName").value=nm;$("qPdfName").value=nm;}}catch(e){}
+const qmsg=t=>{$("qSaveMsg").textContent=t;};
+function qCurrentRecord(name){
+  const rec={kumihimo:1,typ:"eckig",struct:Q.struct,name:(name||"").trim()||"Muster eckig",col:Q.col.join(""),pal:S.pal.slice(),names:S.names.slice(),saved:Date.now()};
+  if(QE.cells&&QE.key===Q.struct){const cells={};for(const f in QE.cells)cells[f]=QE.cells[f].map(r=>r.map(v=>v<0?".":String(v)).join(""));rec.editor={R:QE.R,cells};}
+  return rec;
+}
+function qValid(o){
+  if(!o||typeof o!=="object"||o.typ!=="eckig"||!QSTRUCTS[o.struct])return null;
+  const st=QSTRUCTS[o.struct],col=[...String(o.col||"")].map(Number);
+  if(col.length!==st.setup.length||col.some(v=>!(v>=0&&v<6)))return null;
+  const pal=Array.isArray(o.pal)?o.pal.filter(h=>typeof h==="string"&&HEX.test(h)).slice(0,6):[];
+  const names=Array.isArray(o.names)?o.names.map(x=>String(x).slice(0,30)):[];
+  let editor=null;
+  if(o.editor&&[4,6,8,12].includes(+o.editor.R)&&o.editor.cells&&typeof o.editor.cells==="object"&&st.faces.every(f=>Array.isArray(o.editor.cells[f])&&o.editor.cells[f].every(r=>typeof r==="string"&&/^[.0-5]*$/.test(r))))editor={R:+o.editor.R,cells:o.editor.cells};
+  return {typ:"eckig",name:String(o.name||"Muster eckig").slice(0,60),struct:o.struct,col,pal,names,editor,saved:+o.saved||0,id:o.id};
+}
+function qApplyRecord(p){
+  if(p.pal.length){const f=fullPal(p);S.pal=f.pal;S.names=f.names;save();}
+  if(p.struct!==Q.struct){Q.struct=p.struct;qRebuild();}
+  Q.col=p.col.slice();Q.step=0;
+  let ok=false;
+  if(p.editor){qeBuildMap();QE.R=p.editor.R;QE.key=Q.struct;QE.cells={};ok=true;
+    for(const f of QSTRUCTS[Q.struct].faces){const rows=p.editor.cells[f];if(rows.length!==qeRowsOf(f)||rows.some(r=>r.length!==QE.map[f].xs.length)){ok=false;break;}QE.cells[f]=rows.map(r=>[...r].map(ch=>ch==="."?-1:+ch));}}
+  if(!ok)qeFromPlan();
+  qSetName(p.name);qRender();renderSwatches();
+}
+function qLocalOwn(){try{return (JSON.parse(localStorage.getItem("kumihimo-muster-eckig")||"[]")||[]).map(qValid).filter(Boolean);}catch(e){return [];}}
+function qWriteLocal(list){try{localStorage.setItem("kumihimo-muster-eckig",JSON.stringify(list.map(p=>({kumihimo:1,typ:"eckig",name:p.name,struct:p.struct,col:p.col.join(""),pal:p.pal,names:p.names,editor:p.editor,saved:p.saved,id:p.id}))));return true;}catch(e){return false;}}
+async function qSaveOwn(rec){
+  if(DB){try{await DB.collection("muster-eckig").add(rec);return true;}catch(e){qmsg("Speichern im Artefakt hat nicht geklappt. Ich lege es in diesem Browser ab.");}}
+  const list=qLocalOwn();list.unshift(qValid({...rec,id:"l"+Date.now()}));QOWN=list;const ok=qWriteLocal(list);qRenderOwn();return ok;
+}
+async function qRemoveOwn(p){
+  if(DB&&!String(p.id).startsWith("l")){try{await DB.doc("muster-eckig/"+p.id).delete();}catch(e){qmsg("Löschen hat nicht geklappt.");}return;}
+  QOWN=qLocalOwn().filter(x=>x.id!==p.id);qWriteLocal(QOWN);qRenderOwn();
+}
+function qChipRows(struct,col,pal){
+  const st=QSTRUCTS[struct],rows={};st.setup.forEach((id,s)=>{(rows[id[0]]=rows[id[0]]||[]).push(`<i style="background:${pal[col[s]]||pal[0]}"></i>`);});
+  return `<div class="chiprows">${Object.entries(rows).map(([side,ch])=>`<div><small>${qSideName[side]}</small>${ch.join("")}</div>`).join("")}</div>`;
+}
+function qRenderOwn(){
+  const g=$("qOwnGrid");if(!g)return;g.innerHTML="";
+  $("qOwnNote").textContent=DB?"Gespeicherte Muster für die eckige Platte. Sie liegen beim Artefakt.":"Gespeicherte Muster für die eckige Platte. Sie liegen in diesem Browser; mit „Als Datei speichern“ nimmst du sie mit. Speichern unter Export.";
+  if(!QOWN.length){const e=document.createElement("div");e.className="empty";e.textContent="Noch keine eigenen Muster. Unter „4 Export“ gibst du einen Namen ein und tippst auf Speichern.";g.appendChild(e);return;}
+  QOWN.forEach(p=>{
+    const pal=fullPal(p).pal,d=p.saved?new Date(p.saved).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
+    const t=document.createElement("button");t.type="button";t.className="tile qtile";t.setAttribute("aria-label",p.name+" laden");
+    t.innerHTML=qChipRows(p.struct,p.col,pal)+"<b></b><span></span>";
+    t.querySelector("b").textContent=p.name;t.querySelector("span").textContent=`${QSTRUCTS[p.struct].name}${d?" · "+d:""}`;
+    const del=document.createElement("span");del.className="del";del.setAttribute("role","button");del.tabIndex=0;del.textContent=qArmed===p.id?"Löschen?":"×";if(qArmed===p.id)del.classList.add("armed");
+    const act=e=>{e.stopPropagation();if(qArmed===p.id){qArmed=null;qRemoveOwn(p);}else{qArmed=p.id;qRenderOwn();}};
+    del.onclick=act;del.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();act(e);}};
+    t.onclick=e=>{if(e.target.closest(".del"))return;qApplyRecord(p);qmsg(`„${p.name}“ geladen.`);showSub("eckig","editor");};
+    t.appendChild(del);g.appendChild(t);
+  });
+}
+$("qbSave").onclick=async()=>{const name=$("qSaveName").value.trim();if(!name){qmsg("Bitte zuerst einen Namen eingeben.");$("qSaveName").focus();return;}
+  if(await qSaveOwn(qCurrentRecord(name))){qmsg(`„${name}“ gespeichert. Es steht unter „1 Muster“ bei „Meine Muster“.`);qSetName(name);}};
+$("qSaveName").addEventListener("keydown",e=>{if(e.key==="Enter")$("qbSave").click();});
+if(LOCALFILE)$("qbExport").hidden=false;
+$("qbExport").onclick=async()=>{
+  const name=$("qSaveName").value.trim()||"Kumihimo-eckig",data=JSON.stringify(qCurrentRecord(name),null,1),fn=slug(name)+".json";
+  if(!DL&&LOCALFILE){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.download=fn;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);qmsg("Datei erstellt. Lege sie in den Ordner Muster.");return;}
+  try{await DL.save({filename:fn,data});qmsg("Datei gespeichert.");}catch(e){const c=e&&e.code;qmsg(c==="declined"?"Speichern abgebrochen.":c==="rate_limited"?"Es ist schon ein Speicherdialog offen.":"Dateien lassen sich hier nicht speichern. Nimm „Code kopieren“.");}
+};
+$("qbCopy").onclick=()=>{const txt=JSON.stringify(qCurrentRecord($("qSaveName").value));
+  const fb=()=>{$("qPasteBox").hidden=false;$("qPasteIn").value=txt;$("qPasteIn").focus();$("qPasteIn").select();qmsg("Code markiert – mit Strg+C kopieren.");};
+  try{navigator.clipboard.writeText(txt).then(()=>qmsg("Code kopiert."),fb);}catch(e){fb();}};
+$("qbPasteToggle").onclick=()=>{const b=$("qPasteBox");b.hidden=!b.hidden;if(!b.hidden){$("qPasteIn").value="";$("qPasteIn").focus();}};
+/* shared import: accepts round and square records */
+async function importObjects(objs,report){
+  let r=0,q=0,bad=0,lastR=null,lastQ=null;
+  for(const o of objs){
+    const pq=qValid(o);
+    if(pq){if(!QOWN.some(x=>x.name===pq.name&&x.struct===pq.struct&&x.col.join("")===pq.col.join(""))&&objs.length>1)await qSaveOwn({kumihimo:1,typ:"eckig",name:pq.name,struct:pq.struct,col:pq.col.join(""),pal:pq.pal,names:pq.names,saved:pq.saved||Date.now(),...(pq.editor?{editor:pq.editor}:{})});q++;lastQ=pq;continue;}
+    const pr=validRecord(o);
+    if(pr){if(!OWN.some(x=>x.name===pr.name&&x.n===pr.n&&x.neck.join("")===pr.neck.join(""))&&objs.length>1)await saveOwn({kumihimo:1,name:pr.name,n:pr.n,neck:pr.neck.join(""),pal:pr.pal,names:pr.names,saved:pr.saved||Date.now(),...(pr.matrix?{matrix:pr.matrix}:{})});r++;lastR=pr;continue;}
+    bad++;
+  }
+  const here=$("tab-eckig").hidden?"rund":"eckig";
+  if(lastR&&(here==="rund"||!lastQ)){applyPattern(lastR);setName(lastR.name);}
+  if(lastQ&&(here==="eckig"||!lastR)){qApplyRecord(lastQ);}
+  renderLibrary();qRenderOwn();
+  const parts=[];if(r)parts.push(`${r} ${r===1?"Muster":"Muster"} für die runde Scheibe`);if(q)parts.push(`${q} für die eckige Platte`);
+  report(parts.length?`${parts.join(" und ")} geladen${objs.length>1?" und unter „Meine Muster“ abgelegt":""}${bad?`; ${bad} ohne lesbares Muster`:""}.`:"Darin ist kein Kumihimo-Muster, das ich lesen kann.");
+  if(lastQ&&!lastR&&here==="rund")showSub("eckig","editor");
+  else if(lastR&&!lastQ&&here==="eckig")showSub("rund","editor");
+}
+async function readFiles(files){const out=[];for(const f of files){try{out.push(JSON.parse(await f.text()));}catch(e){out.push(null);}}return out;}
+$("qbPasteLoad").onclick=()=>{let o=null;try{o=JSON.parse($("qPasteIn").value);}catch(e){}importObjects([o],qmsg);};
+$("qFileIn").addEventListener("change",async e=>{const files=[...(e.target.files||[])];e.target.value="";if(files.length)importObjects(await readFiles(files),qmsg);});
+
+/* PDF eckig */
+function buildPdfQ(jsPDF){
+  const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+  const W=210,H=297,ML=18,MR=18,MT=24,MB=20,CW=W-ML-MR,st=QSTRUCTS[Q.struct];
+  const name=($("qPdfName").value||"").trim()||"Kumihimo-Muster";
+  const date=new Date().toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const col=c=>doc.setTextColor(...rgb(c)),draw=c=>doc.setDrawColor(...rgb(c)),fill=c=>doc.setFillColor(...rgb(c)),font=(f,t,z)=>{doc.setFont(f,t);doc.setFontSize(z);};
+  let y=MT;const need=h=>{if(y+h>H-MB){doc.addPage();y=MT+4;}};
+  const chipAt=(x,yy,hex,r=1.5)=>{fill(hex);draw(lum(hex)>0.8?PT.leise:mixHex(hex,"#000000",.35));doc.setLineWidth(0.2);doc.circle(x,yy,r,"FD");};
+  const arrow=(x1,x2,yy)=>{draw(PT.leise);doc.setLineWidth(0.25);doc.line(x1,yy,x2-1,yy);fill(PT.leise);doc.triangle(x2,yy,x2-1.6,yy-0.9,x2-1.6,yy+0.9,"F");};
+  const h2=t=>{need(16);y+=6;font("times","bold",13.5);col(PT.prim);doc.text(t,ML,y);y+=1.8;draw(PT.prim);doc.setLineWidth(0.35);doc.line(ML,y,ML+CW,y);y+=5;};
+  const para=(t,sz=9.5,c=PT.text)=>{font("helvetica","normal",sz);col(c);const l=doc.splitTextToSize(t,CW);need(l.length*sz*0.42+1);doc.text(l,ML,y);y+=l.length*sz*0.42+2;};
+  const period=qPeriod(),cnt={};Q.col.forEach(c=>cnt[c]=(cnt[c]||0)+1);
+  // Titelkopf
+  font("helvetica","normal",8);col(PT.leise);doc.setCharSpace(0.9);doc.text("FLECHTPLAN · ECKIGE PLATTE",ML,y);doc.setCharSpace(0);y+=9;
+  font("times","bold",21);col(PT.prim);const tl=doc.splitTextToSize(name,CW);doc.text(tl,ML,y);y+=tl.length*8.2-1;
+  font("times","normal",12);col(PT.leise);doc.text(`${st.name} · Platte 1-12 / A-H`,ML,y);y+=5;
+  draw(PT.prim);doc.setLineWidth(0.7);doc.line(ML,y,ML+CW,y);y+=5;
+  const meta=[["Druckdatum",date],["Fäden",`${st.setup.length} (${Object.keys(cnt).length} Farben: ${Object.keys(cnt).map(Number).sort((a,b)=>a-b).map(c=>`${S.names[c]} ${cnt[c]}`).join(", ")})`],
+    ["Durchgang",`${st.moves.length} Züge, davon ${st.moves.filter(m=>!m[2]).length} quer und ${st.moves.filter(m=>m[2]).length} zum Zurücksetzen`],
+    ["Rapport",period?`Farben liegen nach ${period} ${period===1?"Durchgang":"Durchgängen"} wieder wie am Anfang`:"wiederholt sich nicht innerhalb von 12 Durchgängen"],
+    ["Mitwirkung","Claude (Anthropic) - Rechenmodell und Planer"]];
+  draw(PT.linie);doc.setLineWidth(0.15);doc.line(ML,y,ML+CW,y);y+=4.5;
+  meta.forEach(([k,v])=>{font("helvetica","normal",7);col(PT.leise);doc.setCharSpace(0.3);doc.text(k.toUpperCase(),ML,y);doc.setCharSpace(0);font("helvetica","normal",9);col(PT.text);doc.text(doc.splitTextToSize(v,CW-30)[0],ML+30,y);y+=4.6;});
+  y-=1;doc.line(ML,y,ML+CW,y);y+=4;
+  // 1 Aufbau: plate
+  h2("1  Aufbau");
+  const sc=0.27,cx=ML+45,cy=y+42,P=(id)=>{const [x,yy]=qPos(id);return [cx+x*sc,cy+yy*sc];};
+  draw(PT.linie);doc.setLineWidth(0.3);doc.roundedRect(cx-130*sc,cy-130*sc,260*sc,260*sc,3,3,"S");doc.circle(cx,cy,14*sc,"S");
+  font("helvetica","normal",6);col(PT.leise);
+  for(let i=1;i<=12;i++){const x=cx+(-110+(i-1)*20)*sc;doc.line(x,cy-130*sc,x,cy-120*sc);doc.line(x,cy+130*sc,x,cy+120*sc);doc.text(String(i),x,cy-134*sc,{align:"center"});doc.text(String(i),x,cy+140*sc,{align:"center"});}
+  for(let j=1;j<=8;j++){const yy=cy+(-70+(j-1)*20)*sc,L=String.fromCharCode(64+j);doc.line(cx-130*sc,yy,cx-120*sc,yy);doc.line(cx+130*sc,yy,cx+120*sc,yy);doc.text(L,cx-136*sc,yy+0.8,{align:"center"});doc.text(L,cx+136*sc,yy+0.8,{align:"center"});}
+  st.setup.forEach((id,s)=>{const [px,py]=P(id),a=Math.atan2(py-cy,px-cx);draw(PT.linie);doc.setLineWidth(0.2);doc.line(cx+14*sc*Math.cos(a),cy+14*sc*Math.sin(a),px,py);chipAt(px,py,S.pal[Q.col[s]],1.9);});
+  // setup table right of plate
+  let ty=y+6;const tx=ML+98;
+  font("helvetica","bold",8);col(PT.leise);doc.text("Schlitz",tx,ty);doc.text("Farbe",tx+26,ty);ty+=1.6;draw(PT.prim);doc.setLineWidth(0.3);doc.line(tx,ty,ML+CW,ty);ty+=4.2;
+  st.setup.forEach((id,s)=>{if(s%2){fill(PT.zebra);doc.rect(tx,ty-4,ML+CW-tx,6,"F");}font("helvetica","normal",9.5);col(PT.text);doc.text(qLabel(id),tx,ty);chipAt(tx+27.5,ty-1.1,S.pal[Q.col[s]]);col(PT.text);doc.text(S.names[Q.col[s]],tx+31,ty);ty+=6;});
+  y=Math.max(cy+42,ty)+2;
+  para(st.source.replace(/<[^>]+>/g,"").replace(/[„“]/g,'"'),8.5,PT.leise);
+  // 2 Flechtplan
+  doc.addPage();y=MT+4;h2("2  Flechtplan");
+  para(`Die Platte wird nicht gedreht. Ein Durchgang hat ${st.moves.length} Züge. Danach sind wieder dieselben Schlitze belegt, aber mit anderen Fäden; deshalb wechseln die Farben der wandernden Fäden.${period?` Nach ${period} ${period===1?"Durchgang":"Durchgängen"} liegen die Farben wieder wie am Anfang.`:""}`);
+  y+=1;const fx=[ML,ML+16,ML+60,ML+100,ML+140];
+  font("helvetica","bold",8);col(PT.leise);["Zug","Faden","von","nach",""].forEach((t,i)=>doc.text(t,fx[i],y));y+=1.6;draw(PT.prim);doc.setLineWidth(0.3);doc.line(ML,y,ML+CW,y);y+=4.4;
+  QSIM.steps.slice(0,2*st.moves.length).forEach((mv,k)=>{
+    need(6.4);
+    if(mv.m===0&&mv.c>0){draw(PT.linie);doc.setLineWidth(0.3);doc.line(ML,y-4.2,ML+CW,y-4.2);}
+    if(k%2){fill(PT.zebra);doc.rect(ML,y-4,CW,6,"F");}
+    font("helvetica","normal",9.5);col(PT.text);doc.text(`${mv.c+1}.${mv.m+1}`,fx[0],y);
+    chipAt(fx[1]+1.5,y-1.1,S.pal[Q.col[mv.s]]);col(PT.text);doc.text(S.names[Q.col[mv.s]],fx[1]+5,y);
+    doc.text(qLabel(mv.from),fx[2],y);arrow(fx[2]+22,fx[3]-4,y-1.1);doc.text(qLabel(mv.to),fx[3],y);
+    if(mv.reset){font("helvetica","italic",8);col(PT.leise);doc.text("zurücksetzen",fx[4],y);}
+    y+=6;
+  });
+  draw(PT.linie);doc.setLineWidth(0.15);doc.line(ML,y-4,ML+CW,y-4);y+=2;
+  // 3 Fadenbedarf
+  const L=+$("qLen").value||0,fac=+$("qFac").value||1,add=+$("qAdd").value||0,per=L*fac+add;
+  need(50);h2("3  Fadenbedarf");
+  para(`Fertige Länge ${L} cm · Einarbeitungsfaktor ${String(fac).replace(".",",")} · Zugabe ${add} cm je Strang. Länge je Strang = Länge × Faktor + Zugabe.`);
+  y+=1;const mx=[ML,ML+50,ML+80,ML+120];
+  font("helvetica","bold",8);col(PT.leise);["Farbe","Stränge","Länge je Strang","Gesamt"].forEach((t,i)=>doc.text(t,mx[i],y));y+=1.6;draw(PT.prim);doc.setLineWidth(0.3);doc.line(ML,y,ML+CW,y);y+=4.4;
+  let tot=0;Object.keys(cnt).map(Number).sort((a,b)=>a-b).forEach((c,i)=>{need(6.4);const t=cnt[c]*per;tot+=t;if(i%2){fill(PT.zebra);doc.rect(ML,y-4,CW,6,"F");}
+    chipAt(mx[0]+1.5,y-1.1,S.pal[c]);font("helvetica","normal",9.5);col(PT.text);doc.text(S.names[c],mx[0]+5,y);doc.text(String(cnt[c]),mx[1],y);doc.text(fmt(per),mx[2],y);doc.text(fmt(t),mx[3],y);y+=6;});
+  draw(PT.prim);doc.setLineWidth(0.3);doc.line(ML,y-4.2,ML+CW,y-4.2);font("helvetica","bold",9.5);col(PT.text);doc.text("Summe",mx[0]+5,y);doc.text(String(st.setup.length),mx[1],y);doc.text(fmt(tot),mx[3],y);y+=7;
+  para("Bei der Anleitung von Fire Mountain Gems werden die Fäden in der Mitte gefaltet; zwei Stränge kommen dann aus einem doppelt so langen Faden. Den Einarbeitungsfaktor am besten mit einer Probe messen.",8.5,PT.leise);
+  const pages=doc.getNumberOfPages();
+  for(let p=2;p<=pages;p++){doc.setPage(p);font("helvetica","normal",8);col(PT.leise);doc.text(doc.splitTextToSize(name,CW-50)[0],ML,MT-8);doc.text(`Kumihimo-Planer  ·  ${date}`,W-MR,MT-8,{align:"right"});draw(PT.linie);doc.setLineWidth(0.15);doc.line(ML,MT-6,W-MR,MT-6);
+    font("helvetica","normal",7.5);doc.text("Daniel Ertl",ML,H-10);font("helvetica","italic",7.5);doc.text(URHEBER,W/2,H-10,{align:"center"});font("helvetica","normal",7.5);doc.text(`Seite ${p} von ${pages}`,W-MR,H-10,{align:"right"});}
+  doc.setProperties({title:`Flechtplan ${name}`,subject:st.name,creator:"Kumihimo-Planer"});
+  return {doc,name};
+}
+$("qbPdf").onclick=async()=>{
+  const btn=$("qbPdf"),pm=t=>{$("qPdfMsg").textContent=t;};btn.disabled=true;pm("PDF wird erstellt …");
+  try{const lib=await loadJsPdf();const {doc,name}=buildPdfQ(lib.jsPDF);const fname="Flechtplan-"+slug(name)+".pdf",blob=doc.output("blob");
+    if(DL){try{await DL.save({filename:fname,data:blob});pm("PDF gespeichert.");}catch(e){const c=e&&e.code;pm(c==="declined"?"Speichern abgebrochen.":c==="rate_limited"?"Es ist schon ein Speicherdialog offen.":"Das PDF ließ sich hier nicht speichern.");}}
+    else if(!window.claude){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);pm(`„${fname}“ erstellt.`);}
+    else pm("Dateien lassen sich in dieser Ansicht nicht speichern.");
+  }catch(e){pm("Die PDF-Bibliothek konnte nicht geladen werden. Für den Export ist eine Internetverbindung nötig.");}
+  finally{btn.disabled=false;}
+};
+QOWN=qLocalOwn();
+
+/* tabs */
+function setTab(t){
+  const eck=t==="eckig";
+  $("tab-rund").hidden=eck;$("tab-eckig").hidden=!eck;
+  $("tabBtnRund").setAttribute("aria-selected",String(!eck));$("tabBtnEckig").setAttribute("aria-selected",String(eck));
+  try{localStorage.setItem("kumihimo-tab",t);}catch(e){}
+  rerenderVisible();
+}
+document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)setTab(b.dataset.tab);});
+document.querySelector(".tabs").addEventListener("keydown",e=>{if(e.key==="ArrowRight"||e.key==="ArrowLeft"){const cur=$("tab-eckig").hidden?"rund":"eckig",nxt=cur==="rund"?"eckig":"rund";setTab(nxt);$(nxt==="rund"?"tabBtnRund":"tabBtnEckig").focus();}});
+qLoad();qRebuild();qeLoad();
+
+
+
+/* ---------- Unter-Tabs ---------- */
+function rerenderVisible(){
+  if(!$("tab-eckig").hidden){qRender();return;}
+  refresh();edRender(false);renderLibrary();
+}
+function showSub(tab,sub){
+  const bar=document.querySelector(`.subtabs[data-tab="${tab}"]`);if(!bar)return;
+  const panel=$("tab-"+tab);
+  if(panel.hidden)setTab(tab);
+  bar.querySelectorAll("[data-sub]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.sub===sub)));
+  panel.querySelectorAll(":scope > .subpanel").forEach(p=>p.hidden=p.dataset.sub!==sub);
+  try{localStorage.setItem("kumihimo-sub-"+tab,sub);}catch(e){}
+  rerenderVisible();
+  const top=document.querySelector(".tabs").getBoundingClientRect().top;
+  if(top<0)document.querySelector(".tabs").scrollIntoView({behavior:RM?"auto":"smooth"});
+}
+document.querySelectorAll(".subtabs").forEach(bar=>{
+  bar.addEventListener("click",e=>{const b=e.target.closest("[data-sub]");if(b)showSub(bar.dataset.tab,b.dataset.sub);});
+  bar.addEventListener("keydown",e=>{if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;const bs=[...bar.querySelectorAll("[data-sub]")],i=bs.findIndex(b=>b.getAttribute("aria-selected")==="true"),j=(i+(e.key==="ArrowRight"?1:bs.length-1))%bs.length;showSub(bar.dataset.tab,bs[j].dataset.sub);bs[j].focus();});
+});
+
+/* ---------- einklappbare Container ---------- */
+let COLL={};try{COLL=JSON.parse(localStorage.getItem("kumihimo-collapsed")||"{}")||{};}catch(e){}
+function initCollapsibles(){
+  const seen={};
+  document.querySelectorAll("section.block").forEach(box=>{
+    const head=box.firstElementChild;
+    if(!head||!head.matches("h2,h3,h4,.sechead,div"))return;
+    const label=(head.querySelector("h2,h3,h4")||head).textContent.trim().replace(/\s+/g," ").slice(0,40);
+    let key=(box.id||label);const n=(seen[key]=(seen[key]||0)+1);if(n>1)key+="#"+n;
+    head.classList.add("chead");
+    const btn=document.createElement("button");btn.type="button";btn.className="ctoggle";
+    const target=head.matches("div:not(.sechead)")?(head.querySelector("h3")||head):head;
+    target.appendChild(btn);
+    const apply=c=>{box.classList.toggle("is-collapsed",c);btn.setAttribute("aria-expanded",String(!c));btn.setAttribute("aria-label",(c?"Aufklappen: ":"Einklappen: ")+label);btn.title=c?"Aufklappen":"Einklappen";};
+    apply(!!COLL[key]);
+    btn.addEventListener("click",e=>{e.stopPropagation();const c=!box.classList.contains("is-collapsed");apply(c);if(c)COLL[key]=1;else delete COLL[key];try{localStorage.setItem("kumihimo-collapsed",JSON.stringify(COLL));}catch(err){}if(!c)rerenderVisible();});
+  });
+}
+initCollapsibles();
+
+
+/* ---------- Kopf: Version, ZIP, Copyright ---------- */
+const BUILD="24.09.2026 14:34";
+$("verInfo").textContent="Stand "+BUILD;
+$("cpYear").textContent=String(Math.max(2026,new Date().getFullYear()));
+const ZIPFILES=["kumihimo-planer.html","README.html","README.md","kumihimo_modell.py","Muster/4-farben-spirale.json","Muster/band-rot-orange-gelb-weiss.json"];
+let jszipP=null;
+function loadJsZip(){if(window.JSZip)return Promise.resolve(window.JSZip);if(!jszipP)jszipP=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";sc.onload=()=>window.JSZip?res(window.JSZip):rej(new Error("jszip"));sc.onerror=()=>{jszipP=null;rej(new Error("load"));};document.head.appendChild(sc);});return jszipP;}
+$("lnkZip").addEventListener("click",async e=>{
+  if(!window.claude)return;          // lokal: die ZIP-Datei im Ordner wird direkt geladen
+  e.preventDefault();
+  const info=$("verInfo"),old=info.textContent;
+  if(!DL){info.textContent="Download ist in dieser Ansicht nicht möglich.";return;}
+  info.textContent="ZIP wird gepackt …";
+  try{
+    const JSZip=await loadJsZip(),zip=new JSZip();
+    for(const p of ZIPFILES){const r=await fetch(p);if(!r.ok)throw new Error(p);zip.file("KumiHimo/"+p,await r.arrayBuffer());}
+    const blob=await zip.generateAsync({type:"blob",compression:"DEFLATE"});
+    await DL.save({filename:"kumihimo-planer.zip",data:blob});info.textContent=old;
+  }catch(err){info.textContent=(err&&err.code==="declined")?old:"Download ging nicht, bitte später noch einmal.";}
+});
+$("cpCopy").onclick=()=>{const t="dertl@web.de";const done=()=>{$("cpCopy").textContent="kopiert";setTimeout(()=>$("cpCopy").textContent="kopieren",1500);};
+  try{navigator.clipboard.writeText(t).then(done,()=>{const r=document.createRange();r.selectNodeContents($("cpMail"));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);});}catch(e){}};
+
+/* ---------- refresh ---------- */
+let catTimer=0;
+function refresh(full){
+  cssCache={};
+  syncSeg();renderSwatches();renderDisk();renderChart();sizeCord();renderCord();renderBeads();renderPlan();renderSetup();renderMaterial();
+  if(ED.cells){if(ED.n!==S.n)edFromPlan(true);edRender();}
+  clearTimeout(catTimer);catTimer=setTimeout(()=>{renderCatalog();renderLibrary();},full?0:120);
+  save();
+}
+new ResizeObserver(()=>{renderChart();sizeCord();renderCord();}).observe(document.querySelector(".stage"));
+const mq=window.matchMedia("(prefers-color-scheme: dark)");mq.addEventListener&&mq.addEventListener("change",()=>{cssCache={};renderChart();renderCord();renderCatalog();});
+new MutationObserver(()=>{cssCache={};renderChart();renderCord();renderCatalog();}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+/* ---------- init ---------- */
+const had=load(); rebuild(); if(!had)S.col=defaultColors(S.n);
+if(!edLoad())edDefault();
+buildDisk(); refresh(true); initStores();
+new ResizeObserver(()=>edRender(false)).observe($("editor"));
+$("bSpin").textContent=S.spin?"Anhalten":"Drehen";
+if(S.spin)requestAnimationFrame(loop);
+try{for(const t of ["rund","eckig"]){const sb=localStorage.getItem("kumihimo-sub-"+t);if(sb&&sb!=="muster"){const bar=document.querySelector(`.subtabs[data-tab="${t}"]`);bar.querySelectorAll("[data-sub]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.sub===sb)));$("tab-"+t).querySelectorAll(":scope > .subpanel").forEach(p=>p.hidden=p.dataset.sub!==sb);}}if(localStorage.getItem("kumihimo-tab")==="eckig")setTab("eckig");else rerenderVisible();}catch(e){}
+})();
+</script>
+
+</body>
+</html>

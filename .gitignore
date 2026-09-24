@@ -1,0 +1,5 @@
+# Nicht ins Repository: erzeugte PDFs, Protokolle, Installer, interne Notizen
+*.pdf
+*.log
+*.exe
+intern/
